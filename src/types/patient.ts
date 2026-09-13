@@ -135,4 +135,23 @@ export interface Patient {
     increases: string[];
     reduces: string[];
   };
+  // Anti-Gravity Health System fields
+  patientId?: string;
+  vitalSigns?: {
+    bp: string;
+    heartRate: number;
+    spo2: number;
+    bloodGlucose?: string;
+    temp?: string;
+  };
+  riskLevel?: 'High' | 'Moderate' | 'Low';
+  lastVisitDate?: string;
+  patientHistory?: string[];
+  currentMedicationsList?: {
+    name: string;
+    dosage: string;
+    frequency: string;
+    route?: string;
+  }[];
+  aiDiagnosticNotes?: string;
 }
