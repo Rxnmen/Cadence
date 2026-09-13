@@ -1,5 +1,61 @@
+# ==============================================================================
+# Git Ignore Configuration - Cadence Web Application
+# ==============================================================================
+
+# Environment Variables & Secrets
+.env
+.env.*
+.env.local
+*.env
+!.env.example
+
+# Android & Mobile Packages (APKs / AABs)
+*.apk
+*.aab
+*.ap_
+*.dex
+*.ipa
+android/app/build/
+android/.gradle/
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build Outputs & Bundles
+dist/
+dist-ssr/
+build/
+out/
+coverage/
+*.tsbuildinfo
+
+# Large Archives & Compressed Files
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+*.iso
+*.dmg
+
+# Executables & Binary Artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+*.bin
+
+# Large Media & Video Files
+*.mp4
+*.mov
+*.avi
+*.mkv
+
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -7,21 +63,23 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
-.env
-.env.*
-!.env.example
+# OS Generated Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
-# Editor directories and files
+# IDE & Editor Directories
+.idea/
 .vscode/*
 !.vscode/extensions.json
-.idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+*.sublime-project
+*.sublime-workspace
