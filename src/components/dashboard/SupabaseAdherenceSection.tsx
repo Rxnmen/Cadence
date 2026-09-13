@@ -123,7 +123,7 @@ export const SupabaseAdherenceSection: React.FC = () => {
   const handleLogDose = async (medId: string, status: MedicationStatus) => {
     const result = await logDose(medId, status);
     if (result.error) {
-      alert(result.error);
+      showNotice(result.error);
     } else {
       showNotice(`Dose marked as ${status.toUpperCase()}! Adherence score updated.`);
     }
@@ -133,15 +133,19 @@ export const SupabaseAdherenceSection: React.FC = () => {
     if (!window.confirm(`Are you sure you want to delete ${name}?`)) return;
     const result = await deleteUserMedication(medId);
     if (result.error) {
-      alert(result.error);
+      showNotice(result.error);
     } else {
       showNotice(`${name} removed from your regimen.`);
     }
   };
 
   // Find latest log for a medication
-  const getLatestLogForMed = (medId: string) => {
-    return medicationLogs.find((l) => l.medication_id === medId);
+  const getLatestLogForMed = (medId: string, medName?: string) => {
+    return medicationLogs.find(
+      (l) =>
+        l.medication_id === medId ||
+        (medName && l.medication?.name?.toLowerCase() === medName.toLowerCase())
+    );
   };
 
   return (
@@ -321,7 +325,7 @@ export const SupabaseAdherenceSection: React.FC = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {userMedications.map((med) => {
-                const latestLog = getLatestLogForMed(med.id);
+                const latestLog = getLatestLogForMed(med.id, med.name);
 
                 return (
                   <div

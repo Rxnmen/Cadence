@@ -35,7 +35,7 @@ export const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
   onClose,
   onRunAssessment,
 }) => {
-  const { theme, openDetective, logDose, addUserSymptom, userSymptoms } = useApp();
+  const { theme, openDetective, logDose, addUserSymptom, userSymptoms, medicationLogs } = useApp();
   const [activeTab, setActiveTab] = useState<
     'overview' | 'medications' | 'symptoms' | 'history' | 'ai-notes'
   >('overview');
@@ -53,12 +53,23 @@ export const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
     setTimeout(() => setFeedback(null), 3000);
   };
 
+  const getMedLatestLog = (medName: string) => {
+    return (medicationLogs || []).find((l) => {
+      const logMedName = l.medication?.name || l.medication_id;
+      return (
+        logMedName?.toLowerCase() === medName.toLowerCase() ||
+        logMedName?.toLowerCase().includes(medName.toLowerCase()) ||
+        medName.toLowerCase().includes(logMedName?.toLowerCase() || '')
+      );
+    });
+  };
+
   const handleRecordDose = async (medName: string, status: MedicationStatus) => {
     const res = await logDose(medName, status);
     if (res.error) {
       showFeedback(`Error: ${res.error}`);
     } else {
-      showFeedback(`Dose of ${medName} recorded as ${status.toUpperCase()} in Supabase`);
+      showFeedback(`Dose of ${medName} recorded as ${status.toUpperCase()}`);
     }
   };
 
@@ -137,8 +148,16 @@ export const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
 
         {/* Feedback Banner */}
         {feedback && (
-          <div className="px-6 py-2.5 bg-emerald-500/10 border-b border-emerald-500/30 text-emerald-400 text-xs font-semibold flex items-center gap-2 animate-fade-in">
-            <CheckCircle2 className="w-4 h-4 shrink-0" />
+          <div className={`px-6 py-2.5 border-b text-xs font-semibold flex items-center gap-2 animate-fade-in ${
+            feedback.startsWith('Error:')
+              ? 'bg-rose-500/15 border-rose-500/30 text-rose-300'
+              : 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
+          }`}>
+            {feedback.startsWith('Error:') ? (
+              <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400" />
+            ) : (
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+            )}
             <span>{feedback}</span>
           </div>
         )}
@@ -260,24 +279,49 @@ export const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
                     frequency: patient.primaryMedication.frequency,
                     route: patient.primaryMedication.route,
                   },
-                ]).map((med, idx) => (
-                  <div
-                    key={idx}
-                    className={`p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                      theme === 'dark' ? 'bg-slate-900/60 border-slate-800' : 'bg-slate-50 border-slate-200'
-                    }`}
-                  >
-                    <div className="space-y-0.5">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-xs text-slate-200">{med.name}</span>
-                        <span className="text-[10px] font-mono px-2 py-0.2 rounded bg-cyan-950/80 text-cyan-400 border border-cyan-800/60 font-semibold">
-                          {med.dosage}
-                        </span>
+                ]).map((med, idx) => {
+                  const latestLog = getMedLatestLog(med.name);
+
+                  return (
+                    <div
+                      key={idx}
+                      className={`p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                        theme === 'dark' ? 'bg-slate-900/60 border-slate-800' : 'bg-slate-50 border-slate-200'
+                      }`}
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-xs text-slate-200">{med.name}</span>
+                          <span className="text-[10px] font-mono px-2 py-0.2 rounded bg-cyan-950/80 text-cyan-400 border border-cyan-800/60 font-semibold">
+                            {med.dosage}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-slate-400">
+                          Schedule: <strong className="text-slate-300">{med.frequency}</strong> • Route: {med.route || 'Oral'}
+                        </div>
+                        {latestLog && (
+                          <div className="text-[10px] font-semibold flex items-center gap-1.5 pt-0.5">
+                            <span
+                              className={`w-2 h-2 rounded-full ${
+                                latestLog.status === 'taken'
+                                  ? 'bg-emerald-400'
+                                  : latestLog.status === 'late'
+                                  ? 'bg-amber-400'
+                                  : latestLog.status === 'skipped'
+                                  ? 'bg-slate-400'
+                                  : 'bg-rose-400'
+                              }`}
+                            />
+                            <span className="text-slate-300">
+                              Status: <strong className="uppercase text-emerald-400">{latestLog.status}</strong>{' '}
+                              ({new Date(latestLog.created_at).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })})
+                            </span>
+                          </div>
+                        )}
                       </div>
-                      <div className="text-[11px] text-slate-400">
-                        Schedule: <strong className="text-slate-300">{med.frequency}</strong> • Route: {med.route || 'Oral'}
-                      </div>
-                    </div>
 
                     {/* Dose Actions Buttons */}
                     <div className="flex items-center gap-1.5 flex-wrap self-end sm:self-auto">
@@ -315,7 +359,8 @@ export const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
                       </button>
                     </div>
                   </div>
-                ))}
+                );
+              })}
               </div>
             </div>
           )}

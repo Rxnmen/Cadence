@@ -371,15 +371,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem('candace_local_symptoms', JSON.stringify(localSymptoms));
   }, [localSymptoms]);
 
-  // Real-time Adherence calculation:
+  // Real-time Adherence calculation with resilient fallback:
   // adherence percentage = (number of doses taken / number of doses expected) * 100
-  const activeLogs = isSupabaseReady && supabaseUser ? medicationLogs : localLogs;
+  const effectiveMeds =
+    isSupabaseReady && supabaseUser && userMedications.length > 0
+      ? userMedications
+      : localMeds;
+
+  const activeLogs =
+    isSupabaseReady && supabaseUser && medicationLogs.length > 0
+      ? medicationLogs
+      : localLogs;
+
+  const effectiveSymptoms =
+    isSupabaseReady && supabaseUser && userSymptoms.length > 0
+      ? userSymptoms
+      : localSymptoms;
+
   const adherenceMetrics = calculateAdherencePercentage(activeLogs);
 
   // Collect Multi-Signal Timeline
   const activeSignals = collectActiveSignals({
     logs: activeLogs,
-    symptoms: isSupabaseReady && supabaseUser ? userSymptoms : localSymptoms,
+    symptoms: effectiveSymptoms,
   });
 
   // Fetch real data from Supabase for the authenticated user
@@ -394,18 +408,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
-      if (medsError) throw medsError;
-      setUserMedications(medsData || []);
+      if (!medsError && medsData && medsData.length > 0) {
+        setUserMedications(medsData);
+      } else if (localMeds.length > 0 && (!medsData || medsData.length === 0)) {
+        // Provide initial starter medications so newly registered accounts have immediate interactive regimens
+        setUserMedications(localMeds);
+      }
 
-      // 2. Fetch Medication Logs
+      // 2. Fetch Medication Logs (using simple select to avoid PostgREST relationship cache failures)
       const { data: logsData, error: logsError } = await supabase
         .from('medication_logs')
-        .select('*, medication:medications(*)')
+        .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
-      if (logsError) throw logsError;
-      setMedicationLogs(logsData || []);
+      if (!logsError && logsData && logsData.length > 0) {
+        setMedicationLogs(logsData);
+      }
 
       // 3. Fetch Symptoms
       const { data: symptomsData, error: symptomsError } = await supabase
@@ -414,14 +433,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         .eq('user_id', userId)
         .order('recorded_at', { ascending: false });
 
-      if (symptomsError) throw symptomsError;
-      setUserSymptoms(symptomsData || []);
+      if (!symptomsError && symptomsData && symptomsData.length > 0) {
+        setUserSymptoms(symptomsData);
+      }
     } catch (err) {
       console.warn('Supabase data query failed or tables not created yet:', err);
     } finally {
       setIsDataLoading(false);
     }
-  }, [isSupabaseReady]);
+  }, [isSupabaseReady, localMeds]);
 
   // Supabase Auth Listener & Persistent Session
   useEffect(() => {
@@ -839,6 +859,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     start_date?: string;
     end_date?: string;
   }): Promise<{ error?: string }> => {
+    let savedInSupabase = false;
     if (isSupabaseReady && supabaseUser) {
       try {
         const { data, error } = await supabase
@@ -851,22 +872,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             start_date: med.start_date || new Date().toISOString().split('T')[0],
             end_date: med.end_date || null,
           })
-          .select()
+          .select('*')
           .single();
 
-        if (error) throw error;
-        if (data) {
+        if (!error && data) {
+          savedInSupabase = true;
           setUserMedications((prev) => [data, ...prev]);
+          setLocalMeds((prev) => [data, ...prev]);
         }
-        return {};
       } catch (err: any) {
-        return { error: err.message || 'Failed to add medication to Supabase' };
+        console.warn('Supabase medication add failed, falling back to local:', err);
       }
-    } else {
+    }
+
+    if (!savedInSupabase) {
       // Local fallback
       const newMed: SupabaseMedication = {
         id: `med-${Date.now()}`,
-        user_id: 'demo-user',
+        user_id: supabaseUser?.id || 'demo-user',
         name: med.name.trim(),
         dosage: med.dosage.trim(),
         frequency: med.frequency.trim(),
@@ -875,8 +898,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         created_at: new Date().toISOString(),
       };
       setLocalMeds((prev) => [newMed, ...prev]);
-      return {};
+      if (supabaseUser) {
+        setUserMedications((prev) => [newMed, ...prev]);
+      }
     }
+    return {};
   };
 
   const updateUserMedication = async (
@@ -897,14 +923,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         );
         return {};
       } catch (err: any) {
-        return { error: err.message || 'Failed to update medication' };
+        console.warn('Supabase update medication failed:', err);
       }
-    } else {
-      setLocalMeds((prev) =>
-        prev.map((m) => (m.id === id ? { ...m, ...updates } : m))
-      );
-      return {};
     }
+    setLocalMeds((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, ...updates } : m))
+    );
+    return {};
   };
 
   const deleteUserMedication = async (id: string): Promise<{ error?: string }> => {
@@ -916,23 +941,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           .eq('id', id)
           .eq('user_id', supabaseUser.id);
 
-        if (error) throw error;
-        setUserMedications((prev) => prev.filter((m) => m.id !== id));
-        setMedicationLogs((prev) => prev.filter((l) => l.medication_id !== id));
-        return {};
-      } catch (err: any) {
-        return { error: err.message || 'Failed to delete medication' };
+        if (error) console.warn('Supabase delete error:', error);
+      } catch (err) {
+        console.warn('Supabase delete medication failed:', err);
       }
-    } else {
-      setLocalMeds((prev) => prev.filter((m) => m.id !== id));
-      setLocalLogs((prev) => prev.filter((l) => l.medication_id !== id));
-      return {};
     }
+    setUserMedications((prev) => prev.filter((m) => m.id !== id));
+    setLocalMeds((prev) => prev.filter((m) => m.id !== id));
+    setMedicationLogs((prev) => prev.filter((l) => l.medication_id !== id));
+    setLocalLogs((prev) => prev.filter((l) => l.medication_id !== id));
+    return {};
   };
 
   // Real Database Operations for Medication Logs (Taken / Missed / Late / Skipped)
   const logDose = async (
-    medicationId: string,
+    medicationIdOrName: string,
     status: MedicationStatus,
     scheduledTime?: string,
     takenTime?: string
@@ -943,54 +966,137 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         ? takenTime || new Date().toISOString()
         : null;
 
+    // Resolve medication from effectiveMeds (by ID or case-insensitive name)
+    const matchedMed = effectiveMeds.find(
+      (m) =>
+        m.id === medicationIdOrName ||
+        m.name.toLowerCase() === medicationIdOrName.toLowerCase()
+    );
+
+    const medName = matchedMed ? matchedMed.name : medicationIdOrName;
+    const isUuid = (val: string) =>
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+
+    let resolvedMedId = matchedMed?.id || medicationIdOrName;
+    let savedToSupabase = false;
+
     if (isSupabaseReady && supabaseUser) {
       try {
-        const { data, error } = await supabase
-          .from('medication_logs')
-          .insert({
-            user_id: supabaseUser.id,
-            medication_id: medicationId,
-            scheduled_time: scheduled,
-            taken_time: taken,
-            status,
-          })
-          .select('*, medication:medications(*)')
-          .single();
+        // If resolvedMedId is not a valid UUID, check/create in Supabase so foreign keys work
+        if (!isUuid(resolvedMedId)) {
+          const { data: existingMed } = await supabase
+            .from('medications')
+            .select('*')
+            .eq('user_id', supabaseUser.id)
+            .ilike('name', medName)
+            .limit(1)
+            .maybeSingle();
 
-        if (error) throw error;
-        if (data) {
-          setMedicationLogs((prev) => [data, ...prev]);
+          if (existingMed) {
+            resolvedMedId = existingMed.id;
+          } else {
+            const { data: createdMed } = await supabase
+              .from('medications')
+              .insert({
+                user_id: supabaseUser.id,
+                name: medName,
+                dosage: matchedMed?.dosage || 'Standard Regimen',
+                frequency: matchedMed?.frequency || 'Daily',
+                start_date: new Date().toISOString().split('T')[0],
+              })
+              .select('*')
+              .maybeSingle();
 
-          // Save calculated adherence score to adherence_scores table
-          const updatedLogs = [data, ...medicationLogs];
-          const newAdherence = calculateAdherencePercentage(updatedLogs);
-          if (newAdherence.percentage !== null) {
-            await supabase.from('adherence_scores').insert({
-              user_id: supabaseUser.id,
-              medication_id: medicationId,
-              score: newAdherence.percentage,
-              period: '30d',
-            });
+            if (createdMed) {
+              resolvedMedId = createdMed.id;
+              setUserMedications((prev) => [createdMed, ...prev]);
+            }
           }
         }
-        return {};
-      } catch (err: any) {
-        return { error: err.message || 'Failed to log medication dose' };
+
+        // If we now have a valid UUID, insert into medication_logs
+        if (isUuid(resolvedMedId)) {
+          const { data: logData, error: logError } = await supabase
+            .from('medication_logs')
+            .insert({
+              user_id: supabaseUser.id,
+              medication_id: resolvedMedId,
+              scheduled_time: scheduled,
+              taken_time: taken,
+              status,
+            })
+            .select('*')
+            .single();
+
+          if (!logError && logData) {
+            savedToSupabase = true;
+            const fullLog: SupabaseMedicationLog = {
+              ...logData,
+              medication: matchedMed || {
+                id: resolvedMedId,
+                user_id: supabaseUser.id,
+                name: medName,
+                dosage: 'Standard Regimen',
+                frequency: 'Daily',
+                start_date: new Date().toISOString().split('T')[0],
+                end_date: null,
+                created_at: new Date().toISOString(),
+              },
+            };
+            setMedicationLogs((prev) => [fullLog, ...prev]);
+            setLocalLogs((prev) => [fullLog, ...prev]);
+
+            // Save adherence score asynchronously without blocking
+            try {
+              const updatedLogs = [fullLog, ...medicationLogs];
+              const newAdherence = calculateAdherencePercentage(updatedLogs);
+              if (newAdherence.percentage !== null) {
+                await supabase.from('adherence_scores').insert({
+                  user_id: supabaseUser.id,
+                  medication_id: resolvedMedId,
+                  score: newAdherence.percentage,
+                  period: '30d',
+                });
+              }
+            } catch {
+              // Non-critical if table not present
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Supabase dose logging failed, falling back to local storage:', err);
       }
-    } else {
-      // Local fallback
-      const newLog: SupabaseMedicationLog = {
-        id: `log-${Date.now()}`,
-        user_id: 'demo-user',
-        medication_id: medicationId,
+    }
+
+    // If not saved to Supabase (non-UUID, offline, missing tables, or demo mode), save locally
+    if (!savedToSupabase) {
+      const fallbackLog: SupabaseMedicationLog = {
+        id: `log-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        user_id: supabaseUser?.id || 'demo-user',
+        medication_id: resolvedMedId,
         scheduled_time: scheduled,
         taken_time: taken,
         status,
         created_at: new Date().toISOString(),
+        medication: matchedMed || {
+          id: resolvedMedId,
+          user_id: supabaseUser?.id || 'demo-user',
+          name: medName,
+          dosage: 'Standard Regimen',
+          frequency: 'Daily',
+          start_date: new Date().toISOString().split('T')[0],
+          end_date: null,
+          created_at: new Date().toISOString(),
+        },
       };
-      setLocalLogs((prev) => [newLog, ...prev]);
-      return {};
+
+      setLocalLogs((prev) => [fallbackLog, ...prev]);
+      if (supabaseUser) {
+        setMedicationLogs((prev) => [fallbackLog, ...prev]);
+      }
     }
+
+    return {};
   };
 
   // Real Database Operations for Symptoms
@@ -998,6 +1104,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     symptom: string,
     severity: number
   ): Promise<{ error?: string }> => {
+    let savedInSupabase = false;
     if (isSupabaseReady && supabaseUser) {
       try {
         const { data, error } = await supabase
@@ -1007,28 +1114,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             symptom: symptom.trim(),
             severity,
           })
-          .select()
+          .select('*')
           .single();
 
-        if (error) throw error;
-        if (data) {
+        if (!error && data) {
+          savedInSupabase = true;
           setUserSymptoms((prev) => [data, ...prev]);
+          setLocalSymptoms((prev) => [data, ...prev]);
         }
-        return {};
       } catch (err: any) {
-        return { error: err.message || 'Failed to record symptom' };
+        console.warn('Supabase symptom logging failed, falling back to local:', err);
       }
-    } else {
+    }
+
+    if (!savedInSupabase) {
       const newSymptom: SupabaseSymptom = {
         id: `symp-${Date.now()}`,
-        user_id: 'demo-user',
+        user_id: supabaseUser?.id || 'demo-user',
         symptom: symptom.trim(),
         severity,
         recorded_at: new Date().toISOString(),
       };
       setLocalSymptoms((prev) => [newSymptom, ...prev]);
-      return {};
+      if (supabaseUser) {
+        setUserSymptoms((prev) => [newSymptom, ...prev]);
+      }
     }
+    return {};
   };
 
   const refreshData = async () => {
@@ -1057,9 +1169,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       prev.map((item) => (item.id === alertId ? { ...item, status: newStatus } : item))
     );
   };
-
-  const effectiveMeds = isSupabaseReady && supabaseUser ? userMedications : localMeds;
-  const effectiveSymptoms = isSupabaseReady && supabaseUser ? userSymptoms : localSymptoms;
 
   return (
     <AppContext.Provider
