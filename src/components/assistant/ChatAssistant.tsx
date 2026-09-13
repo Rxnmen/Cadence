@@ -11,6 +11,9 @@ import {
   Clock,
   Layers,
   Search,
+  Copy,
+  Check,
+  Zap,
 } from 'lucide-react';
 
 interface ChatMessage {
@@ -24,6 +27,7 @@ interface ChatMessage {
 
 export const ChatAssistant: React.FC = () => {
   const { selectedPatient, patients, openDetective } = useApp();
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const suggestedPrompts = [
     'Why was this patient flagged?',
@@ -39,7 +43,7 @@ export const ChatAssistant: React.FC = () => {
     {
       id: 'm-1',
       sender: 'assistant',
-      text: `Hello Dr. Sharma. I am the Cadence Clinical Decision Assistant. I analyze routine multimodal signals (pharmacy claims, symptom logs, telemonitoring vitals, and wearables) across your authorized cohort to help connect subtle clinical clues.\n\nCurrently reviewing ${selectedPatient.name} (${selectedPatient.code}) — ${selectedPatient.primaryMedication.name}. How can I assist your clinical review?`,
+      text: `Hello Dr. Sharma. I am the Cadence Clinical Decision Assistant. I analyze routine multimodal signals (pharmacy claims, symptom logs, telemonitoring vitals, and wearables) across your authorized cohort to help connect subtle clinical clues.\n\nCurrently reviewing **${selectedPatient.name} (${selectedPatient.code})** — prescribed **${selectedPatient.primaryMedication.name}**. How can I assist your clinical review today?`,
       timestamp: 'Just now',
     },
   ]);
@@ -104,37 +108,52 @@ export const ChatAssistant: React.FC = () => {
         text: reply,
         timestamp: 'Just now',
         patientCode: selectedPatient.code,
-        sources: ['Pharmacy Claims', 'Patient App', 'Home Telehealth'],
+        sources: ['Pharmacy Claims', 'Patient App', 'Home Telehealth', 'EHR Clinical Notes'],
       };
       setMessages((prev) => [...prev, assistantMsg]);
       setIsTyping(false);
-    }, 500);
+    }, 600);
+  };
+
+  const handleCopy = (id: string, text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col h-[calc(100vh-140px)] min-h-[560px] overflow-hidden">
+    <div className="bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col h-[calc(100vh-140px)] min-h-[600px] overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/70">
+      <div className="p-4 sm:p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50/70">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-600 shadow-2xs">
-            <Bot className="w-5 h-5" />
+          <div className="relative">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-teal-500 to-sky-600 flex items-center justify-center text-white shadow-xs">
+              <Bot className="w-5 h-5" />
+            </div>
+            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white ring-1 ring-emerald-300" />
           </div>
+
           <div>
-            <h2 className="text-sm md:text-base font-bold text-slate-900 flex items-center gap-2">
-              <span>Cadence Clinical Assistant</span>
-              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-teal-100 text-teal-800">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-sm sm:text-base font-bold text-slate-900">
+                Cadence Clinical Copilot
+              </h2>
+              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200">
                 Decision Support
               </span>
-            </h2>
-            <p className="text-xs text-slate-500">
-              Ask questions about patterns in your authorized patient data.
+              <span className="text-[11px] font-medium text-slate-500 hidden md:inline">
+                Context: <strong className="text-slate-800 font-bold">{selectedPatient.name}</strong> ({selectedPatient.code})
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Multi-signal pattern inquiry across pharmacy claims, vitals, symptoms, and confounders.
             </p>
           </div>
         </div>
 
         <button
           onClick={() => openDetective(selectedPatient.id)}
-          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200 transition-colors"
+          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200 transition-colors cursor-pointer"
         >
           <Search className="w-3.5 h-3.5" />
           <span>Investigate {selectedPatient.code}</span>
@@ -142,15 +161,15 @@ export const ChatAssistant: React.FC = () => {
       </div>
 
       {/* Suggested Prompt Chips */}
-      <div className="px-4 py-2.5 bg-slate-100/70 border-b border-slate-200 overflow-x-auto flex items-center gap-2 text-xs">
-        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0 flex items-center gap-1">
-          <Sparkles className="w-3 h-3 text-sky-500" /> Prompts:
+      <div className="px-4 py-2.5 bg-slate-50/50 border-b border-slate-200/80 overflow-x-auto flex items-center gap-2 text-xs no-scrollbar">
+        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 flex items-center gap-1.5">
+          <Sparkles className="w-3.5 h-3.5 text-sky-500" /> Suggested:
         </span>
         {suggestedPrompts.map((prompt, idx) => (
           <button
             key={idx}
             onClick={() => handleSend(prompt)}
-            className="px-2.5 py-1 rounded-lg bg-white hover:bg-sky-50 border border-slate-200 hover:border-sky-300 text-slate-700 hover:text-sky-800 font-medium whitespace-nowrap text-xs transition-all shadow-2xs"
+            className="px-3 py-1.5 rounded-xl bg-white hover:bg-sky-50 border border-slate-200/90 hover:border-sky-300 text-slate-700 hover:text-sky-800 font-medium whitespace-nowrap text-xs transition-all shadow-2xs hover:shadow-xs cursor-pointer active:scale-98"
           >
             {prompt}
           </button>
@@ -158,7 +177,7 @@ export const ChatAssistant: React.FC = () => {
       </div>
 
       {/* Messages Scroll Area */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-4">
+      <div className="flex-1 p-5 overflow-y-auto space-y-4">
         {messages.map((msg) => {
           const isUser = msg.sender === 'user';
           return (
@@ -168,9 +187,9 @@ export const ChatAssistant: React.FC = () => {
             >
               {/* Avatar */}
               <div
-                className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 ${
+                className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 shadow-2xs ${
                   isUser
-                    ? 'bg-sky-600 text-white'
+                    ? 'bg-slate-900 text-white'
                     : 'bg-teal-50 border border-teal-200 text-teal-700'
                 }`}
               >
@@ -179,23 +198,51 @@ export const ChatAssistant: React.FC = () => {
 
               {/* Message Bubble */}
               <div
-                className={`p-3.5 rounded-2xl text-xs space-y-2 leading-relaxed ${
+                className={`group relative p-4 rounded-2xl text-xs space-y-2.5 leading-relaxed transition-all ${
                   isUser
-                    ? 'bg-sky-600 text-white shadow-xs rounded-tr-none'
-                    : 'bg-slate-50 border border-slate-200/90 text-slate-800 rounded-tl-none'
+                    ? 'bg-slate-900 text-white shadow-xs rounded-tr-none'
+                    : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none shadow-2xs hover:border-slate-300'
                 }`}
               >
-                <div className="whitespace-pre-line font-normal">{msg.text}</div>
+                {/* Text Content */}
+                <div className="whitespace-pre-line font-normal text-xs sm:text-[13px] leading-relaxed">
+                  {msg.text}
+                </div>
 
-                {/* Sources & Disclaimers */}
+                {/* Sources & Disclaimers for Assistant */}
                 {!isUser && msg.sources && (
-                  <div className="pt-2 border-t border-slate-200/60 flex flex-wrap items-center gap-2 text-[10px] text-slate-500">
-                    <span className="font-semibold text-slate-600">Verified Evidence:</span>
-                    {msg.sources.map((s, i) => (
-                      <span key={i} className="px-1.5 py-0.2 rounded bg-white border border-slate-200">
-                        {s}
+                  <div className="pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-slate-500">
+                      <span className="font-bold text-slate-700 flex items-center gap-1">
+                        <Zap className="w-3 h-3 text-sky-500" /> Correlated Signals:
                       </span>
-                    ))}
+                      {msg.sources.map((s, i) => (
+                        <span
+                          key={i}
+                          className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-medium border border-slate-200/60"
+                        >
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={() => handleCopy(msg.id, msg.text)}
+                      className="text-[11px] text-slate-400 hover:text-slate-700 flex items-center gap-1 cursor-pointer transition-colors"
+                      title="Copy response to clipboard"
+                    >
+                      {copiedId === msg.id ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-600" />
+                          <span className="text-emerald-600 font-semibold">Copied</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3" />
+                          <span>Copy Note</span>
+                        </>
+                      )}
+                    </button>
                   </div>
                 )}
               </div>
@@ -204,20 +251,27 @@ export const ChatAssistant: React.FC = () => {
         })}
 
         {isTyping && (
-          <div className="flex gap-3 items-center text-xs text-slate-400 animate-pulse">
-            <div className="w-8 h-8 rounded-xl bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-600">
+          <div className="flex gap-3 items-center text-xs text-slate-500">
+            <div className="w-8 h-8 rounded-xl bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-600 shrink-0">
               <Bot className="w-4 h-4" />
             </div>
-            <span>Evaluating multi-signal parameters...</span>
+            <div className="p-3 bg-white border border-slate-200 rounded-2xl rounded-tl-none shadow-2xs flex items-center gap-2">
+              <div className="flex gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
+              <span className="text-[11px] font-medium text-slate-500">Correlating longitudinal clinical telemetry...</span>
+            </div>
           </div>
         )}
       </div>
 
-      {/* Mandatory Clinical Disclaimer */}
-      <div className="px-4 py-1.5 bg-slate-50 border-t border-slate-200 text-[11px] text-slate-500 flex items-center justify-center gap-1.5">
+      {/* Mandatory Non-Punitive Clinical Disclaimer */}
+      <div className="px-4 py-2 bg-slate-50/90 border-t border-slate-200 text-[11px] text-slate-500 flex items-center justify-center gap-1.5 text-center">
         <Info className="w-3.5 h-3.5 text-sky-600 shrink-0" />
         <span>
-          AI-generated insights are decision-support information and should be clinically reviewed.
+          <strong>Ethical AI Guardrail:</strong> Outputs are diagnostic decision-support hypotheses, not determinations of patient compliance.
         </span>
       </div>
 
@@ -233,13 +287,13 @@ export const ChatAssistant: React.FC = () => {
           type="text"
           value={inputQuery}
           onChange={(e) => setInputQuery(e.target.value)}
-          placeholder={`Ask about ${selectedPatient.name}'s adherence patterns, baseline, or confounders...`}
-          className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-sky-500 text-slate-800 placeholder-slate-400"
+          placeholder={`Ask about ${selectedPatient.name}'s signals, baseline comparison, or confounders...`}
+          className="flex-1 px-4 py-3 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-sky-500 text-slate-900 placeholder-slate-400 bg-slate-50/50 focus:bg-white transition-all"
         />
         <button
           type="submit"
           disabled={!inputQuery.trim() || isTyping}
-          className="px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 disabled:opacity-40 text-white font-semibold text-xs flex items-center gap-1.5 shadow-2xs transition-all"
+          className="px-5 py-3 rounded-xl bg-slate-900 hover:bg-sky-600 disabled:opacity-40 text-white font-semibold text-xs flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-98"
         >
           <span>Send</span>
           <Send className="w-3.5 h-3.5" />

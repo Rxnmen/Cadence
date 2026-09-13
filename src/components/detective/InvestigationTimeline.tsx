@@ -7,10 +7,10 @@ import {
   HeartPulse,
   Watch,
   Sparkles,
-  CheckCircle2,
-  Calendar,
   Layers,
   ChevronRight,
+  ShieldCheck,
+  Calendar,
 } from 'lucide-react';
 import { ConfidenceBadge } from '../common/RiskBadge';
 
@@ -45,63 +45,70 @@ export const InvestigationTimeline: React.FC<InvestigationTimelineProps> = ({ ti
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-100">
+    <div className="bg-white rounded-2xl border border-slate-200/85 p-5 sm:p-6 shadow-2xs card-elevation-2 space-y-5">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
         <div>
-          <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-            <Layers className="w-4 h-4 text-sky-600" />
-            <span>Multimodal Investigation Timeline</span>
-          </h3>
-          <p className="text-xs text-slate-500">
-            Temporal alignment of pharmacy dispense claims, reported symptoms, and clinical markers.
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600 shadow-2xs">
+              <Layers className="w-4 h-4" />
+            </div>
+            <h3 className="text-base font-bold text-slate-900 tracking-tight">
+              Multimodal Investigation Timeline
+            </h3>
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200">
+              Interactive 8 Milestones
+            </span>
+          </div>
+          <p className="text-xs text-slate-500 mt-1">
+            Chronological convergence of pharmacy dispense events, patient symptom surges, and tele-BP changes.
           </p>
         </div>
-        <span className="text-[11px] font-medium text-sky-700 bg-sky-50 px-2.5 py-1 rounded-lg border border-sky-200/70 self-start sm:self-auto">
-          Interactive: Click any milestone to inspect evidence
+
+        <span className="text-[11px] font-semibold text-sky-700 bg-sky-50/80 px-3 py-1.5 rounded-xl border border-sky-200/80 self-start sm:self-auto shadow-2xs">
+          Click milestone to inspect evidence
         </span>
       </div>
 
       {/* Horizontal Interactive Timeline Scroll Track */}
-      <div className="relative overflow-x-auto pb-4 pt-2">
-        {/* Continuous Connecting Line */}
-        <div className="absolute top-7 left-8 right-8 h-0.5 bg-slate-200 -z-0" />
+      <div className="relative overflow-x-auto pb-4 pt-3">
+        {/* Continuous Guide Line */}
+        <div className="absolute top-8 left-8 right-8 h-0.5 bg-gradient-to-r from-slate-200 via-sky-200 to-amber-200 -z-0" />
 
-        <div className="flex items-start justify-between min-w-[720px] gap-3 px-2">
-          {timeline.map((event, index) => {
+        <div className="flex items-start justify-between min-w-[760px] gap-3 px-2">
+          {timeline.map((event) => {
             const isSelected = event.id === selectedEventId;
             return (
               <button
                 key={event.id}
                 onClick={() => setSelectedEventId(event.id)}
-                className="flex flex-col items-center group relative cursor-pointer focus:outline-none flex-1"
+                className="flex flex-col items-center group relative cursor-pointer focus:outline-none flex-1 transition-all"
               >
-                {/* Milestone Node Badge */}
+                {/* Milestone Node */}
                 <div
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center border-2 transition-all relative z-10 ${
+                  className={`w-11 h-11 rounded-2xl flex items-center justify-center border-2 transition-all duration-300 relative z-10 ${
                     isSelected
-                      ? 'bg-sky-600 text-white border-sky-400 shadow-md scale-110'
+                      ? 'bg-sky-600 text-white border-sky-400 shadow-[0_0_16px_rgba(2,132,199,0.4)] scale-110'
                       : event.isIrregularity
-                      ? 'bg-amber-50 text-amber-700 border-amber-300 group-hover:border-amber-400 group-hover:scale-105'
-                      : 'bg-white text-slate-600 border-slate-300 group-hover:border-sky-400 group-hover:scale-105'
+                      ? 'bg-amber-50 text-amber-700 border-amber-300 group-hover:border-amber-400 group-hover:scale-105 shadow-2xs'
+                      : 'bg-white text-slate-600 border-slate-300/80 group-hover:border-sky-400 group-hover:scale-105 shadow-2xs'
                   }`}
                 >
-                  {getEventIcon(
-                    event.iconType,
-                    isSelected ? false : event.isIrregularity
-                  )}
+                  {getEventIcon(event.iconType, isSelected ? false : event.isIrregularity)}
 
+                  {/* Pulsing Alert Indicator */}
                   {event.isIrregularity && !isSelected && (
-                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-500 rounded-full border-2 border-white" />
+                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-500 rounded-full border-2 border-white shadow-xs animate-pulse" />
                   )}
                 </div>
 
                 {/* Date & Title */}
-                <div className="text-center mt-2.5 w-24">
-                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-tight block">
+                <div className="text-center mt-3 w-24">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight block">
                     {event.displayDate}
                   </span>
                   <span
-                    className={`text-[11px] font-medium leading-tight block truncate mt-0.5 ${
+                    className={`text-[11px] font-semibold leading-snug block truncate mt-0.5 ${
                       isSelected
                         ? 'text-sky-700 font-bold'
                         : event.isIrregularity
@@ -114,9 +121,9 @@ export const InvestigationTimeline: React.FC<InvestigationTimelineProps> = ({ ti
                   </span>
                 </div>
 
-                {/* Selected Indicator Arrow */}
+                {/* Selected Direction Indicator */}
                 {isSelected && (
-                  <div className="w-2 h-2 bg-sky-600 rotate-45 mt-1.5 -mb-2" />
+                  <div className="w-2 h-2 bg-sky-600 rotate-45 mt-2 -mb-2 shadow-xs" />
                 )}
               </button>
             );
@@ -126,57 +133,58 @@ export const InvestigationTimeline: React.FC<InvestigationTimelineProps> = ({ ti
 
       {/* Selected Event Deep-Dive Panel */}
       {selectedEvent && (
-        <div className="mt-4 p-4 bg-slate-50/90 rounded-xl border border-slate-200/90 space-y-3 animate-fadeIn">
-          <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-200">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold px-2 py-0.5 bg-white border border-slate-200 rounded text-slate-700">
+        <div className="p-5 bg-slate-50/90 rounded-2xl border border-slate-200/90 space-y-3.5 shadow-2xs animate-fadeIn">
+          <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-bold px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-slate-800 shadow-2xs">
                 {selectedEvent.displayDate}
               </span>
-              <span className="text-sm font-bold text-slate-900">
+              <span className="text-sm font-extrabold text-slate-900">
                 {selectedEvent.title}
               </span>
               {selectedEvent.isIrregularity && (
-                <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300">
-                  ⚠️ Irregularity Identified
+                <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs flex items-center gap-1">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                  Irregularity Flagged
                 </span>
               )}
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500">
-                Source: <strong className="text-slate-700">{selectedEvent.source}</strong>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-slate-500 font-medium">
+                Stream Source: <strong className="text-slate-800">{selectedEvent.source}</strong>
               </span>
               <ConfidenceBadge level={selectedEvent.confidence} />
             </div>
           </div>
 
           {/* Expected vs Observed Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-            <div className="p-3 bg-white rounded-lg border border-slate-200">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs">
+            <div className="p-3.5 bg-white rounded-xl border border-slate-200 shadow-2xs">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
                 Expected Clinical Baseline
               </span>
-              <span className="font-semibold text-slate-800">
+              <span className="font-semibold text-slate-800 text-xs">
                 {selectedEvent.expectedValue}
               </span>
             </div>
 
-            <div className="p-3 bg-white rounded-lg border border-slate-200">
+            <div className="p-3.5 bg-white rounded-xl border border-slate-200 shadow-2xs">
               <span className="text-[10px] font-bold uppercase tracking-wider text-sky-600 block mb-1">
                 Observed Healthcare Signal
               </span>
-              <span className="font-semibold text-slate-900">
+              <span className="font-extrabold text-slate-900 text-xs">
                 {selectedEvent.observedValue}
               </span>
             </div>
           </div>
 
           {/* Clinical Interpretation */}
-          <div className="p-3 bg-sky-50/60 rounded-lg border border-sky-100 text-xs">
-            <span className="font-semibold text-sky-950 block mb-0.5">
-              Clinical Context & Signal Interpretation:
+          <div className="p-3.5 bg-sky-50/70 rounded-xl border border-sky-200/80 text-xs">
+            <span className="font-bold text-sky-950 block mb-1">
+              Clinical Context & Causality Interpretation:
             </span>
-            <p className="text-slate-700 leading-relaxed">
+            <p className="text-slate-700 leading-relaxed font-normal">
               {selectedEvent.interpretation}
             </p>
           </div>

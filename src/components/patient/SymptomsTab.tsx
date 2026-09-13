@@ -2,11 +2,10 @@ import React, { useState } from 'react';
 import { SymptomRecord } from '../../types/patient';
 import {
   Activity,
-  Calendar,
+  Sparkles,
   AlertTriangle,
   Info,
-  Sparkles,
-  TrendingUp,
+  Calendar,
 } from 'lucide-react';
 
 interface SymptomsTabProps {
@@ -18,10 +17,9 @@ export const SymptomsTab: React.FC<SymptomsTabProps> = ({ symptoms }) => {
     symptoms[symptoms.length - 1] || null
   );
 
-  // Chart coordinates calculation (0 to 10 scale)
   const maxScore = 10;
-  const chartHeight = 160;
-  const chartWidth = 600;
+  const chartHeight = 170;
+  const chartWidth = 620;
 
   const points = symptoms.map((s, index) => {
     const x = (index / (symptoms.length - 1)) * chartWidth;
@@ -33,54 +31,69 @@ export const SymptomsTab: React.FC<SymptomsTabProps> = ({ symptoms }) => {
     return idx === 0 ? `M ${pt.x} ${pt.y}` : `${acc} L ${pt.x} ${pt.y}`;
   }, '');
 
+  const areaD = `${pathD} L ${chartWidth} ${chartHeight} L 0 ${chartHeight} Z`;
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Overview Banner */}
-      <div className="p-4 bg-sky-50/70 border border-sky-200/80 rounded-2xl flex items-start gap-3">
-        <Sparkles className="w-5 h-5 text-sky-600 shrink-0 mt-0.5" />
+      <div className="p-4.5 bg-gradient-to-r from-sky-50/90 to-teal-50/70 border border-sky-200/80 rounded-2xl flex items-start gap-3.5 shadow-2xs">
+        <div className="w-8 h-8 rounded-xl bg-white border border-sky-200 flex items-center justify-center text-sky-600 shrink-0 shadow-2xs">
+          <Sparkles className="w-4 h-4" />
+        </div>
         <div className="space-y-1 text-xs text-sky-950">
-          <div className="font-bold flex items-center gap-2">
+          <div className="font-extrabold flex items-center gap-2">
             <span>Symptom Flare & Refill Gap Temporal Correlation</span>
-            <span className="text-[10px] bg-sky-100 text-sky-800 px-2 py-0.5 rounded font-semibold">
+            <span className="text-[10px] bg-sky-100 text-sky-800 px-2 py-0.5 rounded-full font-bold">
               Cadence Intelligence
             </span>
           </div>
           <p className="text-sky-900 leading-relaxed">
-            Patient logs demonstrate that symptom severity scores rose above the 2.1 personal baseline exactly 4 to 6 days after the projected 30-day medication supply was exhausted.
+            Patient diary logs demonstrate that exertional dyspnea and lower extremity tightness rose above the 2.1 personal baseline exactly 4 to 6 days after the projected 30-day supply was depleted.
           </p>
         </div>
       </div>
 
       {/* Interactive Line Chart Card */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-100">
+      <div className="bg-white rounded-2xl border border-slate-200/85 p-5 sm:p-6 shadow-2xs card-elevation-2 space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
           <div>
-            <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <Activity className="w-4 h-4 text-sky-600" />
-              <span>Symptom Severity Score Trajectory (1 – 10 Scale)</span>
-            </h4>
-            <p className="text-xs text-slate-500">
-              Dots with amber halos indicate symptoms recorded during a verified refill delay period.
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600 shadow-2xs">
+                <Activity className="w-4 h-4" />
+              </div>
+              <h4 className="text-base font-bold text-slate-900 tracking-tight">
+                Symptom Severity Score Trajectory (1 – 10 Scale)
+              </h4>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              Dots with amber halos indicate symptom exacerbations logged during an active pharmacy refill delay period.
             </p>
           </div>
 
-          <div className="flex items-center gap-3 text-xs">
-            <span className="flex items-center gap-1.5 text-slate-600">
-              <span className="w-2.5 h-2.5 rounded-full bg-sky-600" /> Recorded Score
+          <div className="flex items-center gap-3 text-xs bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200/80 font-medium">
+            <span className="flex items-center gap-1.5 text-slate-700">
+              <span className="w-2.5 h-2.5 rounded-full bg-sky-600 shadow-xs" /> Logged Score
             </span>
-            <span className="flex items-center gap-1.5 text-slate-600">
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 ring-2 ring-amber-200" /> Refill Gap
+            <span className="flex items-center gap-1.5 text-slate-700">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 ring-4 ring-amber-200 shadow-xs" /> Refill Gap Coincidence
             </span>
           </div>
         </div>
 
-        {/* SVG Line Chart */}
-        <div className="relative pt-6 pb-2 px-4 bg-slate-50/60 rounded-xl border border-slate-200/80 overflow-x-auto">
-          <div className="min-w-[620px] h-48 relative flex items-center justify-center">
+        {/* SVG Line Chart with Gradient Area Fill */}
+        <div className="relative pt-6 pb-4 px-4 bg-gradient-to-b from-slate-50/90 to-white rounded-2xl border border-slate-200/80 overflow-x-auto shadow-inner">
+          <div className="min-w-[640px] h-52 relative flex items-center justify-center">
             <svg
-              viewBox={`-20 -10 ${chartWidth + 40} ${chartHeight + 30}`}
+              viewBox={`-20 -15 ${chartWidth + 40} ${chartHeight + 40}`}
               className="w-full h-full overflow-visible"
             >
+              <defs>
+                <linearGradient id="symptomAreaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#0284c7" stopOpacity="0.25" />
+                  <stop offset="100%" stopColor="#0284c7" stopOpacity="0.0" />
+                </linearGradient>
+              </defs>
+
               {/* Baseline Reference Band (≤ 2.5) */}
               <rect
                 x="0"
@@ -89,6 +102,7 @@ export const SymptomsTab: React.FC<SymptomsTabProps> = ({ symptoms }) => {
                 height={(2.5 / maxScore) * chartHeight}
                 fill="#ecfdf5"
                 opacity="0.8"
+                rx="4"
               />
               <line
                 x1="0"
@@ -100,11 +114,11 @@ export const SymptomsTab: React.FC<SymptomsTabProps> = ({ symptoms }) => {
                 strokeDasharray="4 4"
               />
               <text
-                x="10"
-                y={chartHeight - (2.1 / maxScore) * chartHeight - 4}
-                className="text-[9px] fill-emerald-700 font-semibold"
+                x="12"
+                y={chartHeight - (2.1 / maxScore) * chartHeight - 5}
+                className="text-[10px] fill-emerald-700 font-extrabold"
               >
-                Personal Baseline (2.1)
+                Personal Baseline (2.1 / 10)
               </text>
 
               {/* Grid Lines */}
@@ -120,17 +134,21 @@ export const SymptomsTab: React.FC<SymptomsTabProps> = ({ symptoms }) => {
                 />
               ))}
 
-              {/* Chart Line */}
+              {/* Area Gradient Fill */}
+              <path d={areaD} fill="url(#symptomAreaGrad)" />
+
+              {/* Chart Glowing Line */}
               <path
                 d={pathD}
                 fill="none"
                 stroke="#0284c7"
-                strokeWidth="2.5"
+                strokeWidth="3"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                className="filter drop-shadow-[0_2px_8px_rgba(2,132,199,0.35)]"
               />
 
-              {/* Interactive Data Points */}
+              {/* Data Points */}
               {points.map((pt, idx) => {
                 const hasRefillEvent = !!pt.symptom.associatedRefillEvent;
                 const isSelected = selectedSymptom?.date === pt.symptom.date;
@@ -139,21 +157,21 @@ export const SymptomsTab: React.FC<SymptomsTabProps> = ({ symptoms }) => {
                   <g
                     key={idx}
                     onClick={() => setSelectedSymptom(pt.symptom)}
-                    className="cursor-pointer"
+                    className="cursor-pointer group"
                   >
                     {hasRefillEvent && (
                       <circle
                         cx={pt.x}
                         cy={pt.y}
-                        r="9"
-                        className="fill-amber-300/40 animate-ping"
+                        r="12"
+                        className="fill-amber-400/30 animate-pulse"
                       />
                     )}
                     <circle
                       cx={pt.x}
                       cy={pt.y}
-                      r={isSelected ? '6' : '4.5'}
-                      className={`transition-all ${
+                      r={isSelected ? '7' : '5'}
+                      className={`transition-all duration-200 ${
                         hasRefillEvent
                           ? 'fill-amber-500 stroke-white stroke-2'
                           : 'fill-sky-600 stroke-white stroke-2'
@@ -161,9 +179,9 @@ export const SymptomsTab: React.FC<SymptomsTabProps> = ({ symptoms }) => {
                     />
                     <text
                       x={pt.x}
-                      y={chartHeight + 18}
+                      y={chartHeight + 20}
                       textAnchor="middle"
-                      className="text-[9px] fill-slate-500 font-mono"
+                      className="text-[10px] fill-slate-500 font-mono font-bold"
                     >
                       {pt.symptom.date.slice(5)}
                     </text>
@@ -176,22 +194,23 @@ export const SymptomsTab: React.FC<SymptomsTabProps> = ({ symptoms }) => {
 
         {/* Selected Symptom Detail Card */}
         {selectedSymptom && (
-          <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="p-4 bg-slate-50/90 rounded-xl border border-slate-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs animate-fadeIn">
             <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-slate-900">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-extrabold text-slate-900">
                   {selectedSymptom.date} — {selectedSymptom.symptomName}
                 </span>
-                <span className="font-bold px-2 py-0.5 rounded bg-sky-100 text-sky-900 text-[11px]">
+                <span className="font-extrabold px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-900 text-[11px] font-mono">
                   Severity: {selectedSymptom.severityScore} / 10
                 </span>
                 {selectedSymptom.associatedRefillEvent && (
-                  <span className="font-semibold text-amber-800 bg-amber-100 px-2 py-0.5 rounded text-[10px]">
-                    ⚠️ {selectedSymptom.associatedRefillEvent}
+                  <span className="font-bold text-amber-900 bg-amber-100 px-2.5 py-0.5 rounded-full text-[10px] border border-amber-200 flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3 text-amber-600" />
+                    {selectedSymptom.associatedRefillEvent}
                   </span>
                 )}
               </div>
-              <p className="text-slate-600 italic">
+              <p className="text-slate-700 italic font-medium">
                 “{selectedSymptom.patientNotes}”
               </p>
             </div>

@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { AlternativeExplanation } from '../../types/patient';
 import {
-  HelpCircle,
-  CheckCircle2,
-  AlertTriangle,
   Scale,
   Sparkles,
+  AlertTriangle,
+  CheckCircle2,
   Info,
   Sliders,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface AlternativeExplanationEngineProps {
@@ -24,128 +24,136 @@ export const AlternativeExplanationEngine: React.FC<AlternativeExplanationEngine
   const primaryCandidate = explanations.find((e) => e.isPrimaryCandidate);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-100">
+    <div className="bg-white rounded-2xl border border-slate-200/85 p-5 sm:p-6 shadow-2xs card-elevation-2 space-y-5">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
         <div>
           <div className="flex items-center gap-2">
-            <Scale className="w-4 h-4 text-amber-600" />
-            <h3 className="text-base font-bold text-slate-900">
+            <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700 shadow-2xs">
+              <Scale className="w-4 h-4" />
+            </div>
+            <h3 className="text-base font-bold text-slate-900 tracking-tight">
               Could something else explain this pattern?
             </h3>
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-200">
+              Confounder Engine
+            </span>
           </div>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Cadence evaluates alternative confounding explanations before attributing patterns to medication-taking irregularity.
+          <p className="text-xs text-slate-500 mt-1">
+            Cadence evaluates alternative confounding hypotheses before attributing temporal patterns to medication-taking irregularity.
           </p>
         </div>
 
-        <span className="text-[11px] font-semibold text-amber-900 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200/80 self-start sm:self-auto flex items-center gap-1.5">
-          <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-          Confounder Engine Active
+        <span className="text-[11px] font-bold text-amber-900 bg-amber-50/80 px-3 py-1.5 rounded-xl border border-amber-200/80 self-start sm:self-auto flex items-center gap-1.5 shadow-2xs">
+          <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+          Confounder Detection Active
         </span>
       </div>
 
       {/* Primary Alternative Banner */}
       {primaryCandidate && (
-        <div className="p-4 bg-amber-50/70 border border-amber-200/90 rounded-xl mb-4 space-y-2">
+        <div className="p-4.5 bg-gradient-to-r from-amber-50/90 via-amber-50/60 to-transparent border border-amber-200/90 rounded-2xl space-y-2.5 shadow-2xs">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
-              <span className="text-xs font-bold text-amber-950 uppercase tracking-wide">
-                Alternative Explanation Detected:
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />
+              <span className="text-xs font-extrabold text-amber-950 uppercase tracking-wider">
+                Primary Alternative Explanation Detected:
               </span>
             </div>
-            <span className="text-[11px] font-semibold text-amber-800 bg-white px-2 py-0.5 rounded border border-amber-200">
+            <span className="text-[11px] font-bold text-amber-800 bg-white px-2.5 py-0.5 rounded-md border border-amber-200 shadow-2xs">
               Evidence Weight: {primaryCandidate.evidenceScore}%
             </span>
           </div>
 
-          <p className="text-xs text-amber-900 leading-relaxed font-medium">
+          <p className="text-xs text-amber-950 leading-relaxed font-semibold">
             “{primaryCandidate.detail}”
           </p>
 
-          <div className="pt-2 border-t border-amber-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-amber-800">
+          <div className="pt-2.5 border-t border-amber-200/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-amber-900">
             <span>
-              <strong>Clinical Action:</strong> Verify whether patient was instructed to divide
-              existing 20 mg tablets after the April 20 dosage change.
+              <strong>Clinical Guidance:</strong> Check whether patient split remaining 20 mg tablets after the April 20 dosage change.
             </span>
-            <span className="font-semibold text-amber-900 bg-amber-100/80 px-2 py-0.5 rounded">
-              Confidence adjusted -18%
+            <span className="font-extrabold text-amber-950 bg-amber-100 px-2 py-0.5 rounded-md">
+              Net Confidence Calibrated (-18%)
             </span>
           </div>
         </div>
       )}
 
-      {/* Visual Weight Balance Bars */}
-      <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 mb-4 space-y-3">
-        <div className="text-xs font-semibold text-slate-800 flex items-center justify-between">
-          <span>Hypothesis Balance Meter</span>
-          <span className="text-[10px] text-slate-500">Uncertainty Calibrated</span>
+      {/* Visual Weight Balance Meter */}
+      <div className="p-4.5 bg-slate-50/90 rounded-2xl border border-slate-200/90 space-y-4 shadow-inner">
+        <div className="text-xs font-bold text-slate-800 flex items-center justify-between">
+          <span className="flex items-center gap-1.5">
+            <Scale className="w-3.5 h-3.5 text-sky-600" />
+            Hypothesis Balance Scale
+          </span>
+          <span className="text-[10px] text-slate-500 font-medium">Uncertainty Calibrated</span>
         </div>
 
         {/* Evidence for Concern Bar */}
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           <div className="flex justify-between text-xs font-medium">
-            <span className="text-slate-700 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-rose-500" />
+            <span className="text-slate-800 flex items-center gap-2 font-bold">
+              <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.5)]" />
               Evidence for Adherence Irregularity
             </span>
-            <span className="font-bold text-slate-900">72%</span>
+            <span className="font-black text-slate-900 font-mono">72% Weight</span>
           </div>
           <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-rose-500 to-amber-500 rounded-full"
+              className="h-full bg-gradient-to-r from-rose-500 to-amber-500 rounded-full transition-all duration-700"
               style={{ width: '72%' }}
             />
           </div>
           <span className="text-[10px] text-slate-500 block font-mono">
-            Refill cycle + symptom spike + tele-BP elevation
+            Dispense delay + symptom flare + tele-BP excursion
           </span>
         </div>
 
         {/* Evidence for Alternative Explanation Bar */}
-        <div className="space-y-1 pt-2 border-t border-slate-200">
+        <div className="space-y-1.5 pt-2.5 border-t border-slate-200">
           <div className="flex justify-between text-xs font-medium">
-            <span className="text-slate-700 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-teal-500" />
+            <span className="text-slate-800 flex items-center gap-2 font-bold">
+              <span className="w-2.5 h-2.5 rounded-full bg-teal-500 shadow-[0_0_6px_rgba(13,148,136,0.5)]" />
               Evidence for Alternative Explanation (Dosage Adjustment)
             </span>
-            <span className="font-bold text-slate-900">68%</span>
+            <span className="font-black text-slate-900 font-mono">68% Weight</span>
           </div>
           <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-teal-500 to-sky-500 rounded-full"
+              className="h-full bg-gradient-to-r from-teal-500 to-sky-500 rounded-full transition-all duration-700"
               style={{ width: '68%' }}
             />
           </div>
           <span className="text-[10px] text-slate-500 block font-mono">
-            Cardiology note on April 20 trial reduction to 10 mg
+            Documented cardiology titration note on April 20
           </span>
         </div>
       </div>
 
-      {/* Evaluated Confounder Hypotheses List */}
-      <div className="space-y-2">
-        <span className="text-xs font-semibold text-slate-700 block">
-          All Evaluated Confounding Hypotheses:
+      {/* Evaluated Confounder Hypotheses Grid */}
+      <div className="space-y-2.5">
+        <span className="text-xs font-bold text-slate-800 block">
+          All Evaluated Confounder Hypotheses:
         </span>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {explanations.map((exp) => {
             const isSelected = selectedHypothesis === exp.id;
             return (
               <div
                 key={exp.id}
                 onClick={() => setSelectedHypothesis(exp.id)}
-                className={`p-3 rounded-xl border text-left cursor-pointer transition-all ${
+                className={`p-3.5 rounded-xl border text-left cursor-pointer transition-all ${
                   exp.isPrimaryCandidate
-                    ? 'bg-amber-50/50 border-amber-300 ring-1 ring-amber-200'
+                    ? 'bg-amber-50/60 border-amber-300 ring-2 ring-amber-200/60 shadow-xs'
                     : isSelected
-                    ? 'bg-sky-50 border-sky-300'
-                    : 'bg-white border-slate-200 hover:bg-slate-50'
+                    ? 'bg-sky-50/80 border-sky-300 ring-2 ring-sky-200/60 shadow-xs'
+                    : 'bg-white border-slate-200/85 hover:bg-slate-50 shadow-2xs'
                 }`}
               >
-                <div className="flex items-center justify-between gap-1 mb-1">
-                  <div className="flex items-center gap-1.5">
+                <div className="flex items-center justify-between gap-1 mb-1.5">
+                  <div className="flex items-center gap-2">
                     <span
                       className={`w-2 h-2 rounded-full shrink-0 ${
                         exp.status === 'detected'
@@ -155,17 +163,17 @@ export const AlternativeExplanationEngine: React.FC<AlternativeExplanationEngine
                           : 'bg-slate-300'
                       }`}
                     />
-                    <span className="text-xs font-bold text-slate-900">
+                    <h5 className="text-xs font-bold text-slate-900">
                       {exp.hypothesis}
-                    </span>
+                    </h5>
                   </div>
 
-                  <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-slate-100 text-slate-600">
-                    {exp.evidenceScore}% weight
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
+                    {exp.evidenceScore}%
                   </span>
                 </div>
 
-                <p className="text-[11px] text-slate-600 leading-snug line-clamp-2">
+                <p className="text-[11px] text-slate-600 leading-snug">
                   {exp.detail}
                 </p>
               </div>

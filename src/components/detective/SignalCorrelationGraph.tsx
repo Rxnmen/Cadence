@@ -1,24 +1,25 @@
 import React, { useState } from 'react';
 import { SignalStrength } from '../../types/patient';
 import {
-  Network,
   Share2,
   Sparkles,
   CheckCircle2,
-  AlertTriangle,
-  Pill,
-  HeartPulse,
   Activity,
-  Calendar,
+  HeartPulse,
+  Pill,
+  AlertTriangle,
+  Zap,
 } from 'lucide-react';
 
 interface Node {
   id: string;
+  step: number;
   label: string;
   category: string;
   strength: SignalStrength;
   description: string;
   connectedTo: string[];
+  evidenceMetric: string;
 }
 
 export const SignalCorrelationGraph: React.FC = () => {
@@ -27,159 +28,201 @@ export const SignalCorrelationGraph: React.FC = () => {
   const nodes: Node[] = [
     {
       id: 'node-pharmacy',
+      step: 1,
       label: 'Pharmacy Dispense Stream',
-      category: 'Source',
+      category: 'Data Feed',
       strength: 'Strong',
-      description: 'Surescripts claims link verifies delay of 8 days (April) and 12 days (May).',
+      description: 'Surescripts claims gateway confirms consecutive delays of 8 days (April) and 12 days (May).',
+      evidenceMetric: 'Observed 42d cycle vs 30d baseline',
       connectedTo: ['node-refill'],
     },
     {
       id: 'node-refill',
-      label: 'Refill Delay Identified',
+      step: 2,
+      label: 'Refill Interval Disruption',
       category: 'Pharmacy Signal',
       strength: 'Strong',
-      description: 'Dispense interval prolonged from 30 days to 42 days.',
+      description: 'Dispense interval elongated by +35% over historical 6-month norm.',
+      evidenceMetric: '2 consecutive cycles with >8-day gap',
       connectedTo: ['node-pharmacy', 'node-availability'],
     },
     {
       id: 'node-availability',
-      label: 'Medication Availability Concern',
+      step: 3,
+      label: 'Supply Depletion Window',
       category: 'Inferred State',
       strength: 'Moderate',
-      description: 'Projected pill supply exhausted during 8-day and 12-day windows prior to pickup.',
+      description: 'Projected tablet availability exhausted prior to pickup, creating potential gap days.',
+      evidenceMetric: 'Zero pills remaining at Day 30',
       connectedTo: ['node-refill', 'node-symptoms'],
     },
     {
       id: 'node-symptoms',
-      label: 'Symptoms Surge (Dyspnea/Fatigue)',
+      step: 4,
+      label: 'Symptom Trajectory Surge',
       category: 'Patient Reported',
       strength: 'Strong',
-      description: 'Patient logged symptom flares exactly 4 days following projected depletion dates.',
+      description: 'Patient logged exertional dyspnea (4.3/10) precisely 4 days following projected depletion date.',
+      evidenceMetric: 'Peak dyspnea 5.2 / 10',
       connectedTo: ['node-availability', 'node-clinical'],
     },
     {
       id: 'node-clinical',
-      label: 'Clinical Marker Shift (BP Elevation)',
+      step: 5,
+      label: 'Biomarker Elevation (Tele-BP)',
       category: 'Clinical Measurement',
       strength: 'Moderate',
-      description: 'Ambulatory tele-BP elevated to 146/92 mmHg, matching symptom spike timeline.',
+      description: 'Ambulatory systolic tele-BP rose to 146/92 mmHg, matching symptom spike timeline.',
+      evidenceMetric: '+18 mmHg above clinical baseline',
       connectedTo: ['node-symptoms', 'node-outcome'],
     },
     {
       id: 'node-outcome',
-      label: 'Possible Adherence Irregularity',
-      category: 'Clinical Decision Support',
+      step: 6,
+      label: 'Potential Adherence Irregularity',
+      category: 'Decision Support',
       strength: 'Moderate',
-      description: 'Temporal convergence of independent streams suggests intermittent medication taking.',
+      description: 'Multi-signal coherence index 0.84 indicates pattern requiring supportive clinical discussion.',
+      evidenceMetric: 'Multi-signal coherence: 0.84',
       connectedTo: ['node-clinical'],
     },
   ];
 
   const selectedNode = nodes.find((n) => n.id === selectedNodeId) || nodes[1];
 
-  const isHighlighted = (nodeId: string) => {
+  const isConnected = (nodeId: string) => {
     if (selectedNodeId === nodeId) return true;
     return selectedNode.connectedTo.includes(nodeId);
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-100">
+    <div className="bg-white rounded-2xl border border-slate-200/85 p-5 sm:p-6 shadow-2xs card-elevation-2 space-y-5">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
         <div>
-          <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-            <Share2 className="w-4 h-4 text-sky-600" />
-            <span>Multi-Signal Correlation Topology</span>
-          </h3>
-          <p className="text-xs text-slate-500">
-            Click any signal node to trace connected causality and evaluate independent evidence links.
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600 shadow-2xs">
+              <Share2 className="w-4 h-4" />
+            </div>
+            <h3 className="text-base font-bold text-slate-900 tracking-tight">
+              Multi-Signal Correlation Topology
+            </h3>
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200">
+              Causal Graph
+            </span>
+          </div>
+          <p className="text-xs text-slate-500 mt-1">
+            Click any signal node to trace connected causality and observe how independent streams converge.
           </p>
         </div>
 
         {/* Legend */}
-        <div className="flex items-center gap-2 text-[11px] self-start sm:self-auto">
-          <span className="flex items-center gap-1 text-slate-600">
-            <span className="w-2 h-2 rounded-full bg-sky-600" /> Strong
+        <div className="flex items-center gap-3 text-xs bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200/80 self-start sm:self-auto font-medium">
+          <span className="flex items-center gap-1.5 text-slate-700">
+            <span className="w-2 h-2 rounded-full bg-sky-600 shadow-[0_0_6px_rgba(2,132,199,0.5)]" /> Strong
           </span>
-          <span className="flex items-center gap-1 text-slate-600">
-            <span className="w-2 h-2 rounded-full bg-teal-500" /> Moderate
+          <span className="flex items-center gap-1.5 text-slate-700">
+            <span className="w-2 h-2 rounded-full bg-teal-500 shadow-[0_0_6px_rgba(13,148,136,0.5)]" /> Moderate
           </span>
-          <span className="flex items-center gap-1 text-slate-600">
+          <span className="flex items-center gap-1.5 text-slate-700">
             <span className="w-2 h-2 rounded-full bg-slate-400" /> Weak
           </span>
         </div>
       </div>
 
-      {/* Interactive Node Network Visualization */}
-      <div className="relative p-6 bg-slate-50/70 rounded-xl border border-slate-200/80 overflow-hidden">
-        {/* Animated Background Vector Flow Lines */}
+      {/* Cyber-Biological Interactive Topology Canvas */}
+      <div className="relative p-6 sm:p-8 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 rounded-2xl border border-slate-800 text-white overflow-hidden shadow-lg">
+        {/* Subtle Ambient Radial Glows */}
+        <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-64 h-64 bg-sky-500/10 rounded-full filter blur-3xl pointer-events-none" />
+        <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-64 h-64 bg-teal-500/10 rounded-full filter blur-3xl pointer-events-none" />
+
+        {/* Background Animated Signal Beam Lines */}
         <svg
-          className="w-full h-24 hidden md:block absolute inset-x-0 top-1/2 -translate-y-1/2 pointer-events-none"
+          className="w-full h-24 hidden lg:block absolute inset-x-0 top-1/2 -translate-y-1/2 pointer-events-none px-6"
           viewBox="0 0 1000 80"
           fill="none"
         >
+          {/* Base Connection Track */}
           <path
-            d="M 50 40 L 220 40 L 400 40 L 600 40 L 780 40 L 950 40"
-            stroke="#94a3b8"
+            d="M 50 40 L 220 40 L 400 40 L 590 40 L 780 40 L 950 40"
+            stroke="rgba(51, 65, 85, 0.7)"
             strokeWidth="3"
-            strokeDasharray="6 6"
+            strokeLinecap="round"
+          />
+
+          {/* Animated Flowing Packets */}
+          <path
+            d="M 50 40 L 220 40 L 400 40 L 590 40 L 780 40 L 950 40"
+            stroke="url(#packetGradient)"
+            strokeWidth="3"
+            strokeDasharray="12 12"
+            strokeLinecap="round"
             className="animate-signal-pulse"
           />
+
+          <defs>
+            <linearGradient id="packetGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#38bdf8" />
+              <stop offset="50%" stopColor="#2dd4bf" />
+              <stop offset="100%" stopColor="#fbbf24" />
+            </linearGradient>
+          </defs>
         </svg>
 
-        {/* Nodes Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 relative z-10">
-          {nodes.map((node, index) => {
-            const active = selectedNodeId === node.id;
-            const highlighted = isHighlighted(node.id);
+        {/* Interactive Node Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3.5 relative z-10">
+          {nodes.map((node) => {
+            const isSelected = selectedNodeId === node.id;
+            const connected = isConnected(node.id);
 
             return (
               <div
                 key={node.id}
                 onClick={() => setSelectedNodeId(node.id)}
-                className={`p-3 rounded-xl cursor-pointer transition-all border flex flex-col justify-between text-left ${
-                  active
-                    ? 'bg-sky-600 text-white border-sky-600 shadow-md scale-105'
-                    : highlighted
-                    ? 'bg-white text-slate-900 border-sky-400 ring-2 ring-sky-200/80 shadow-xs'
-                    : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 opacity-80 hover:opacity-100'
+                className={`p-3.5 rounded-xl cursor-pointer transition-all border flex flex-col justify-between text-left relative ${
+                  isSelected
+                    ? 'bg-sky-600 text-white border-sky-400 shadow-[0_0_20px_rgba(2,132,199,0.5)] scale-105 z-20'
+                    : connected
+                    ? 'bg-slate-800/95 text-white border-sky-400/80 ring-2 ring-sky-400/30 shadow-md'
+                    : 'bg-slate-800/60 text-slate-300 border-slate-700/70 hover:border-slate-500 hover:bg-slate-800'
                 }`}
               >
                 <div>
-                  <div className="flex items-center justify-between gap-1 mb-1.5">
+                  <div className="flex items-center justify-between gap-1 mb-2">
                     <span
-                      className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded ${
-                        active
-                          ? 'bg-sky-700/80 text-white'
-                          : 'bg-slate-100 text-slate-600'
+                      className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${
+                        isSelected
+                          ? 'bg-sky-700 text-white'
+                          : 'bg-slate-700/80 text-slate-300'
                       }`}
                     >
-                      Step {index + 1}
+                      Step {node.step}
                     </span>
                     <span
-                      className={`text-[10px] font-semibold px-1.5 py-0.2 rounded ${
-                        active
-                          ? 'bg-sky-500 text-white'
+                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                        isSelected
+                          ? 'bg-white/20 text-white'
                           : node.strength === 'Strong'
-                          ? 'bg-sky-50 text-sky-700 border border-sky-200'
-                          : 'bg-teal-50 text-teal-700 border border-teal-200'
+                          ? 'bg-sky-950 text-sky-300 border border-sky-800'
+                          : 'bg-teal-950 text-teal-300 border border-teal-800'
                       }`}
                     >
                       {node.strength}
                     </span>
                   </div>
 
-                  <h5
+                  <h4
                     className={`font-bold text-xs leading-snug ${
-                      active ? 'text-white' : 'text-slate-900'
+                      isSelected ? 'text-white' : 'text-slate-100'
                     }`}
                   >
                     {node.label}
-                  </h5>
+                  </h4>
                 </div>
 
                 <div
-                  className={`mt-2 pt-1.5 border-t text-[10px] ${
-                    active ? 'border-sky-500/80 text-sky-100' : 'border-slate-100 text-slate-400'
+                  className={`mt-2.5 pt-2 border-t text-[10px] truncate ${
+                    isSelected ? 'border-sky-500 text-sky-100' : 'border-slate-700 text-slate-400'
                   }`}
                 >
                   {node.category}
@@ -190,21 +233,28 @@ export const SignalCorrelationGraph: React.FC = () => {
         </div>
       </div>
 
-      {/* Selected Node Details */}
+      {/* Selected Node Telemetry Inspector */}
       {selectedNode && (
-        <div className="mt-4 p-3.5 bg-sky-50/60 rounded-xl border border-sky-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-          <div className="space-y-0.5">
-            <span className="font-semibold text-sky-950 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-sky-600" />
-              Node: {selectedNode.label} ({selectedNode.category})
-            </span>
-            <p className="text-slate-700">{selectedNode.description}</p>
+        <div className="p-4 bg-sky-50/70 rounded-xl border border-sky-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs animate-fadeIn">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Zap className="w-4 h-4 text-sky-600 shrink-0" />
+              <span className="font-bold text-sky-950 text-sm">
+                Node {selectedNode.step}: {selectedNode.label}
+              </span>
+              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-sky-100 text-sky-800">
+                {selectedNode.category}
+              </span>
+            </div>
+            <p className="text-slate-700 leading-relaxed font-normal">
+              {selectedNode.description}
+            </p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
-            <span className="text-[11px] text-slate-500">Signal Strength:</span>
-            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-white text-sky-800 border border-sky-300">
-              {selectedNode.strength} Signal
+          <div className="flex flex-col items-end shrink-0 self-start sm:self-auto bg-white p-2.5 rounded-lg border border-sky-200/70 shadow-2xs">
+            <span className="text-[10px] font-mono text-slate-400">Verified Evidence:</span>
+            <span className="text-xs font-bold text-sky-900 font-mono">
+              {selectedNode.evidenceMetric}
             </span>
           </div>
         </div>
