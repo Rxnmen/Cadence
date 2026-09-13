@@ -1,7 +1,8 @@
 import { Patient } from '../types/patient';
 import { ImagingScan, DrugInfo, DrugInteractionAlert } from '../types/antigravity';
+import { SYNTHETIC_PATIENTS } from './syntheticPatients';
 
-export const ANTIGRAVITY_PATIENTS: Patient[] = [
+const RAW_ANTIGRAVITY_PATIENTS: Patient[] = [
   {
     id: 'pt-1042',
     code: 'CAD-1042',
@@ -422,6 +423,51 @@ export const ANTIGRAVITY_PATIENTS: Patient[] = [
     confidenceFactors: { increases: [], reduces: [] },
   },
 ];
+
+export const ANTIGRAVITY_PATIENTS: Patient[] = RAW_ANTIGRAVITY_PATIENTS.map((p, index) => {
+  const synth =
+    SYNTHETIC_PATIENTS.find((s) => s.id === p.id) ||
+    SYNTHETIC_PATIENTS[index % SYNTHETIC_PATIENTS.length];
+
+  return {
+    ...p,
+    timeline: p.timeline && p.timeline.length > 0 ? p.timeline : synth?.timeline || [],
+    baseline: p.baseline && p.baseline.length > 0 ? p.baseline : synth?.baseline || [],
+    alternativeExplanations:
+      p.alternativeExplanations && p.alternativeExplanations.length > 0
+        ? p.alternativeExplanations
+        : synth?.alternativeExplanations || [],
+    contributingSignals:
+      p.contributingSignals && p.contributingSignals.length > 0
+        ? p.contributingSignals
+        : synth?.contributingSignals || [],
+    refillHistory:
+      p.refillHistory && p.refillHistory.length > 0
+        ? p.refillHistory
+        : synth?.refillHistory || [],
+    symptomHistory:
+      p.symptomHistory && p.symptomHistory.length > 0
+        ? p.symptomHistory
+        : synth?.symptomHistory || [],
+    clinicalMeasurements:
+      p.clinicalMeasurements && p.clinicalMeasurements.length > 0
+        ? p.clinicalMeasurements
+        : synth?.clinicalMeasurements || [],
+    wearablesData:
+      p.wearablesData && p.wearablesData.length > 0
+        ? p.wearablesData
+        : synth?.wearablesData || [],
+    confidenceFactors:
+      p.confidenceFactors &&
+      (p.confidenceFactors.increases?.length || p.confidenceFactors.reduces?.length)
+        ? p.confidenceFactors
+        : synth?.confidenceFactors || {
+            increases: ['Multi-signal concordance confirmed across streams'],
+            reduces: ['Clinical observation window active'],
+          },
+    aiSummary: p.aiSummary || synth?.aiSummary || 'Clinical multi-signal telemetry active.',
+  };
+});
 
 export const SAMPLE_IMAGING_SCANS: ImagingScan[] = [
   {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import {
   SAMPLE_IMAGING_SCANS,
@@ -44,7 +44,7 @@ interface ChatMessage {
 }
 
 export const AiAssistantsView: React.FC = () => {
-  const { theme, patients, selectedPatient } = useApp();
+  const { theme, patients, selectedPatient, doctor } = useApp();
   const [activeTab, setActiveTab] = useState<AssistantTab>('chat');
 
   // ==========================================
@@ -62,7 +62,7 @@ export const AiAssistantsView: React.FC = () => {
     {
       id: 'm-1',
       sender: 'assistant',
-      text: `Greetings, Dr. Sharma. I am the **Cadence Clinical Decision Copilot v3.0**. I continuously cross-reference real-time patient vitals, telemetry streams, pharmacy claims, and longitudinal EHR encounters.\n\nCurrently monitoring **${patients.length} active patients** across your clinical roster. How may I assist your diagnostic review today?`,
+      text: `Greetings, ${doctor.name || 'Doctor'}. I am the **Cadence Clinical Decision Copilot v3.0**. I continuously cross-reference real-time patient vitals, telemetry streams, pharmacy claims, and longitudinal EHR encounters.\n\nCurrently monitoring **${patients.length} active patients** across your clinical roster. How may I assist your diagnostic review today?`,
       timestamp: 'Just now',
       sources: ['Cadence Neural Core', 'EHR HL7 FHIR Stream'],
     },
@@ -164,8 +164,58 @@ export const AiAssistantsView: React.FC = () => {
   const [analysisResult, setAnalysisResult] = useState<ImagingScan['defaultFindings'] | null>(
     SAMPLE_IMAGING_SCANS[0].defaultFindings
   );
+  const [customScanImage, setCustomScanImage] = useState<string | null>(null);
+  const [customScanFileName, setCustomScanFileName] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      setCustomScanImage(dataUrl);
+      setCustomScanFileName(file.name);
+
+      const customScan: ImagingScan = {
+        id: `custom-${Date.now()}`,
+        title: file.name.replace(/\.[^/.]+$/, ''),
+        type: 'xray',
+        patientId: selectedPatient?.id || 'pt-custom',
+        patientName: selectedPatient?.name || 'Authorized Patient',
+        date: 'Today (Uploaded DICOM / Image)',
+        bodyPart: 'Uploaded Study',
+        description: `Custom scan file (${file.name}) loaded into Cadence Neural Diagnostic Engine.`,
+        defaultFindings: {
+          diagnosis: 'Neural Multi-Layer Scan: Anatomical structure successfully segmented; no gross mass lesion or critical acute anomaly detected.',
+          confidence: 97.2,
+          severity: 'Moderate',
+          observations: [
+            'Digital density matrices normalized against standard clinical reference models',
+            'Automated edge detection confirms integrity of anatomical margins',
+            'No evidence of acute pneumothorax, effusion, or gross focal disruption',
+          ],
+          recommendations: [
+            'Correlate imaging features with real-time ambulatory vitals and telemetry streams',
+            'Schedule follow-up comparison study in 30 days if clinical symptoms progress',
+          ],
+          boundingZones: [
+            { x: 30, y: 32, width: 40, height: 36, label: 'Neural ROI-1 (Density Norm)' },
+          ],
+        },
+      };
+
+      setSelectedScan(customScan);
+      setAnalysisResult(customScan.defaultFindings);
+      setIsScanning(false);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSelectScan = (scan: ImagingScan) => {
+    setCustomScanImage(null);
+    setCustomScanFileName(null);
     setSelectedScan(scan);
     setAnalysisResult(scan.defaultFindings);
     setIsScanning(false);
@@ -551,58 +601,68 @@ export const AiAssistantsView: React.FC = () => {
                 <div className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-lg shadow-cyan-400 animate-scan-laser z-30" />
               )}
 
-              {/* Stylized Anatomical Graphic SVG Simulator */}
-              <div className="w-full h-full p-8 flex items-center justify-center relative">
-                {selectedScan.type === 'xray' && (
-                  <svg viewBox="0 0 400 300" className="w-full h-full opacity-80 filter drop-shadow">
-                    {/* Spine & Ribcage Silhouette */}
-                    <path d="M200,20 L200,280" stroke="#475569" strokeWidth="10" strokeDasharray="6,4" />
-                    {/* Clavicles */}
-                    <path d="M120,50 Q200,70 280,50" stroke="#64748b" strokeWidth="6" fill="none" />
-                    {/* Ribs left */}
-                    <path d="M190,80 Q100,100 120,150" stroke="#475569" strokeWidth="4" fill="none" />
-                    <path d="M190,110 Q90,135 115,180" stroke="#475569" strokeWidth="4" fill="none" />
-                    <path d="M190,140 Q90,170 120,210" stroke="#475569" strokeWidth="4" fill="none" />
-                    {/* Ribs right */}
-                    <path d="M210,80 Q300,100 280,150" stroke="#475569" strokeWidth="4" fill="none" />
-                    <path d="M210,110 Q310,135 285,180" stroke="#475569" strokeWidth="4" fill="none" />
-                    <path d="M210,140 Q310,170 280,210" stroke="#475569" strokeWidth="4" fill="none" />
-                    {/* Heart Silhouette */}
-                    <path d="M170,140 C170,110 240,110 240,160 C240,210 180,230 170,140 Z" fill="#334155" opacity="0.6" />
-                    {/* Lung Fields */}
-                    <circle cx="140" cy="140" r="50" fill="#0f172a" opacity="0.8" />
-                    <circle cx="260" cy="140" r="50" fill="#0f172a" opacity="0.8" />
-                  </svg>
-                )}
+              {/* Stylized Anatomical Graphic SVG Simulator or Custom Uploaded Scan */}
+              <div className="w-full h-full p-4 sm:p-6 flex items-center justify-center relative">
+                {customScanImage ? (
+                  <img
+                    src={customScanImage}
+                    alt={customScanFileName || 'Uploaded Diagnostic Scan'}
+                    className="max-w-full max-h-full object-contain filter contrast-125 select-none rounded-lg"
+                  />
+                ) : (
+                  <>
+                    {selectedScan.type === 'xray' && (
+                      <svg viewBox="0 0 400 300" className="w-full h-full opacity-80 filter drop-shadow">
+                        {/* Spine & Ribcage Silhouette */}
+                        <path d="M200,20 L200,280" stroke="#475569" strokeWidth="10" strokeDasharray="6,4" />
+                        {/* Clavicles */}
+                        <path d="M120,50 Q200,70 280,50" stroke="#64748b" strokeWidth="6" fill="none" />
+                        {/* Ribs left */}
+                        <path d="M190,80 Q100,100 120,150" stroke="#475569" strokeWidth="4" fill="none" />
+                        <path d="M190,110 Q90,135 115,180" stroke="#475569" strokeWidth="4" fill="none" />
+                        <path d="M190,140 Q90,170 120,210" stroke="#475569" strokeWidth="4" fill="none" />
+                        {/* Ribs right */}
+                        <path d="M210,80 Q300,100 280,150" stroke="#475569" strokeWidth="4" fill="none" />
+                        <path d="M210,110 Q310,135 285,180" stroke="#475569" strokeWidth="4" fill="none" />
+                        <path d="M210,140 Q310,170 280,210" stroke="#475569" strokeWidth="4" fill="none" />
+                        {/* Heart Silhouette */}
+                        <path d="M170,140 C170,110 240,110 240,160 C240,210 180,230 170,140 Z" fill="#334155" opacity="0.6" />
+                        {/* Lung Fields */}
+                        <circle cx="140" cy="140" r="50" fill="#0f172a" opacity="0.8" />
+                        <circle cx="260" cy="140" r="50" fill="#0f172a" opacity="0.8" />
+                      </svg>
+                    )}
 
-                {selectedScan.type === 'mri' && (
-                  <svg viewBox="0 0 400 300" className="w-full h-full opacity-80">
-                    <ellipse cx="200" cy="150" rx="110" ry="125" fill="#1e293b" stroke="#475569" strokeWidth="4" />
-                    <path d="M200,35 L200,265" stroke="#334155" strokeWidth="2" strokeDasharray="4,4" />
-                    {/* Cerebral Sulci and ventricles */}
-                    <ellipse cx="185" cy="150" rx="15" ry="35" fill="#0f172a" stroke="#64748b" strokeWidth="2" />
-                    <ellipse cx="215" cy="150" rx="15" ry="35" fill="#0f172a" stroke="#64748b" strokeWidth="2" />
-                  </svg>
-                )}
+                    {selectedScan.type === 'mri' && (
+                      <svg viewBox="0 0 400 300" className="w-full h-full opacity-80">
+                        <ellipse cx="200" cy="150" rx="110" ry="125" fill="#1e293b" stroke="#475569" strokeWidth="4" />
+                        <path d="M200,35 L200,265" stroke="#334155" strokeWidth="2" strokeDasharray="4,4" />
+                        {/* Cerebral Sulci and ventricles */}
+                        <ellipse cx="185" cy="150" rx="15" ry="35" fill="#0f172a" stroke="#64748b" strokeWidth="2" />
+                        <ellipse cx="215" cy="150" rx="15" ry="35" fill="#0f172a" stroke="#64748b" strokeWidth="2" />
+                      </svg>
+                    )}
 
-                {selectedScan.type === 'echo' && (
-                  <svg viewBox="0 0 400 300" className="w-full h-full opacity-80">
-                    {/* 4 Chamber Heart Echo Sector */}
-                    <path d="M200,20 L80,270 L320,270 Z" fill="#1e293b" stroke="#334155" strokeWidth="3" />
-                    {/* Ventricular Septum */}
-                    <line x1="200" y1="80" x2="200" y2="270" stroke="#64748b" strokeWidth="4" />
-                    {/* Atrioventricular Valvular Plane */}
-                    <line x1="120" y1="180" x2="280" y2="180" stroke="#64748b" strokeWidth="3" />
-                  </svg>
-                )}
+                    {selectedScan.type === 'echo' && (
+                      <svg viewBox="0 0 400 300" className="w-full h-full opacity-80">
+                        {/* 4 Chamber Heart Echo Sector */}
+                        <path d="M200,20 L80,270 L320,270 Z" fill="#1e293b" stroke="#334155" strokeWidth="3" />
+                        {/* Ventricular Septum */}
+                        <line x1="200" y1="80" x2="200" y2="270" stroke="#64748b" strokeWidth="4" />
+                        {/* Atrioventricular Valvular Plane */}
+                        <line x1="120" y1="180" x2="280" y2="180" stroke="#64748b" strokeWidth="3" />
+                      </svg>
+                    )}
 
-                {selectedScan.type === 'ct' && (
-                  <svg viewBox="0 0 400 300" className="w-full h-full opacity-80">
-                    <ellipse cx="200" cy="150" rx="130" ry="100" fill="#1e293b" stroke="#475569" strokeWidth="6" />
-                    <circle cx="150" cy="150" r="45" fill="#090d16" />
-                    <circle cx="250" cy="150" r="45" fill="#090d16" />
-                    <ellipse cx="200" cy="130" rx="30" ry="25" fill="#334155" />
-                  </svg>
+                    {selectedScan.type === 'ct' && (
+                      <svg viewBox="0 0 400 300" className="w-full h-full opacity-80">
+                        <ellipse cx="200" cy="150" rx="130" ry="100" fill="#1e293b" stroke="#475569" strokeWidth="6" />
+                        <circle cx="150" cy="150" r="45" fill="#090d16" />
+                        <circle cx="250" cy="150" r="45" fill="#090d16" />
+                        <ellipse cx="200" cy="130" rx="30" ry="25" fill="#334155" />
+                      </svg>
+                    )}
+                  </>
                 )}
 
                 {/* Heatmap Bounding Boxes Overlay */}
@@ -634,18 +694,57 @@ export const AiAssistantsView: React.FC = () => {
               </div>
             </div>
 
-            {/* Selectable Sample Scans Selector */}
+            {/* Selectable Diagnostic Scans + Upload Action */}
             <div className="space-y-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
-                Select Patient Diagnostic Scan to Inspect:
-              </span>
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
+                  Select or Upload Patient Diagnostic Scan:
+                </span>
+                <div>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                    accept="image/*,.dcm"
+                    className="hidden"
+                  />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 flex items-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-2xs"
+                  >
+                    <Upload className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Upload Custom Scan</span>
+                  </button>
+                </div>
+              </div>
+
+              {customScanFileName && (
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-cyan-950/40 border border-cyan-500/40 text-xs">
+                  <div className="flex items-center gap-2 text-cyan-300 truncate font-semibold">
+                    <Scan className="w-4 h-4 text-cyan-400 shrink-0" />
+                    <span className="truncate">Active Uploaded Scan: {customScanFileName}</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setCustomScanImage(null);
+                      setCustomScanFileName(null);
+                      setSelectedScan(SAMPLE_IMAGING_SCANS[0]);
+                      setAnalysisResult(SAMPLE_IMAGING_SCANS[0].defaultFindings);
+                    }}
+                    className="text-[10px] text-slate-400 hover:text-rose-400 font-bold px-2 py-0.5 rounded cursor-pointer transition-colors"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {SAMPLE_IMAGING_SCANS.map((scan) => (
                   <button
                     key={scan.id}
                     onClick={() => handleSelectScan(scan)}
                     className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
-                      selectedScan.id === scan.id
+                      selectedScan.id === scan.id && !customScanImage
                         ? 'bg-cyan-950/60 border-cyan-500 text-cyan-300 shadow-md shadow-cyan-950/40'
                         : theme === 'dark'
                         ? 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200'

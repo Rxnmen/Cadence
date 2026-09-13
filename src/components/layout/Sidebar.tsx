@@ -24,6 +24,17 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ className = '', onItemClick }) => {
   const { activeView, setActiveView, patients, alerts, theme, doctor, openDetective } = useApp();
 
+  const isDemoDoctor = doctor.name.toLowerCase().includes('rajesh sharma');
+  const getDoctorInitials = (name: string) => {
+    const clean = name.replace(/^Dr\.\s*/i, '').trim();
+    const parts = clean.split(/\s+/);
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+    }
+    return clean.slice(0, 2).toUpperCase() || 'DR';
+  };
+  const doctorInitials = getDoctorInitials(doctor.name);
+
   const highRiskCount = patients.filter((p) => p.riskLevel === 'High' || p.riskCategory === 'High Priority').length;
   const pendingAlertsCount = alerts.filter((a) => a.status === 'pending').length;
 
@@ -265,11 +276,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ className = '', onItemClick })
       }`}>
         <div className="flex items-center gap-3">
           <div className="relative">
-            <img
-              src={doctor.avatarUrl}
-              alt={doctor.name}
-              className="w-9 h-9 rounded-xl object-cover ring-2 ring-cyan-500/30"
-            />
+            {isDemoDoctor && doctor.avatarUrl ? (
+              <img
+                src={doctor.avatarUrl}
+                alt={doctor.name}
+                className="w-9 h-9 rounded-xl object-cover ring-2 ring-cyan-500/30"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            ) : (
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-600 to-indigo-600 text-white font-black text-xs flex items-center justify-center ring-2 ring-cyan-500/30 shadow-xs">
+                {doctorInitials}
+              </div>
+            )}
             <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-slate-900" />
           </div>
 

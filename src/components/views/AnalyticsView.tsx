@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 
 export const AnalyticsView: React.FC = () => {
-  const { kpis, theme } = useApp();
+  const { kpis, theme, doctor } = useApp();
   const isDark = theme === 'dark';
 
   const therapeuticClasses = [
@@ -55,7 +55,7 @@ export const AnalyticsView: React.FC = () => {
               </h2>
             </div>
             <p className={`text-xs mt-1.5 max-w-2xl leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-              Aggregated multimodal pattern discovery across Dr. Maya Sharma's 128 monitored patients. Identifies therapeutic vulnerabilities before clinical decompensation occurs.
+              Aggregated multimodal pattern discovery across {doctor.name}'s monitored clinical cohort. Identifies therapeutic vulnerabilities before clinical decompensation occurs.
             </p>
           </div>
 

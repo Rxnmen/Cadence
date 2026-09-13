@@ -18,12 +18,13 @@ interface InvestigationTimelineProps {
   timeline: TimelineEvent[];
 }
 
-export const InvestigationTimeline: React.FC<InvestigationTimelineProps> = ({ timeline }) => {
+export const InvestigationTimeline: React.FC<InvestigationTimelineProps> = ({ timeline = [] }) => {
+  const safeTimeline = timeline && timeline.length > 0 ? timeline : [];
   const [selectedEventId, setSelectedEventId] = useState<string>(
-    timeline.find((t) => t.isIrregularity)?.id || timeline[0].id
+    safeTimeline.find((t) => t.isIrregularity)?.id || safeTimeline[0]?.id || ''
   );
 
-  const selectedEvent = timeline.find((t) => t.id === selectedEventId) || timeline[0];
+  const selectedEvent = safeTimeline.find((t) => t.id === selectedEventId) || safeTimeline[0] || null;
 
   const getEventIcon = (type: TimelineEvent['iconType'], isIrregular?: boolean) => {
     const iconClass = isIrregular ? 'text-amber-600' : 'text-sky-600';
@@ -71,65 +72,70 @@ export const InvestigationTimeline: React.FC<InvestigationTimelineProps> = ({ ti
       </div>
 
       {/* Horizontal Interactive Timeline Scroll Track */}
-      <div className="relative overflow-x-auto pb-4 pt-3">
-        {/* Continuous Guide Line */}
-        <div className="absolute top-8 left-8 right-8 h-0.5 bg-gradient-to-r from-slate-200 via-sky-200 to-amber-200 -z-0" />
-
-        <div className="flex items-start justify-between min-w-[760px] gap-3 px-2">
-          {timeline.map((event) => {
-            const isSelected = event.id === selectedEventId;
-            return (
-              <button
-                key={event.id}
-                onClick={() => setSelectedEventId(event.id)}
-                className="flex flex-col items-center group relative cursor-pointer focus:outline-none flex-1 transition-all"
-              >
-                {/* Milestone Node */}
-                <div
-                  className={`w-11 h-11 rounded-2xl flex items-center justify-center border-2 transition-all duration-300 relative z-10 ${
-                    isSelected
-                      ? 'bg-sky-600 text-white border-sky-400 shadow-[0_0_16px_rgba(2,132,199,0.4)] scale-110'
-                      : event.isIrregularity
-                      ? 'bg-amber-50 text-amber-700 border-amber-300 group-hover:border-amber-400 group-hover:scale-105 shadow-2xs'
-                      : 'bg-white text-slate-600 border-slate-300/80 group-hover:border-sky-400 group-hover:scale-105 shadow-2xs'
-                  }`}
-                >
-                  {getEventIcon(event.iconType, isSelected ? false : event.isIrregularity)}
-
-                  {/* Pulsing Alert Indicator */}
-                  {event.isIrregularity && !isSelected && (
-                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-500 rounded-full border-2 border-white shadow-xs animate-pulse" />
-                  )}
-                </div>
-
-                {/* Date & Title */}
-                <div className="text-center mt-3 w-24">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight block">
-                    {event.displayDate}
-                  </span>
-                  <span
-                    className={`text-[11px] font-semibold leading-snug block truncate mt-0.5 ${
-                      isSelected
-                        ? 'text-sky-700 font-bold'
-                        : event.isIrregularity
-                        ? 'text-amber-800'
-                        : 'text-slate-700'
-                    }`}
-                    title={event.title}
-                  >
-                    {event.title}
-                  </span>
-                </div>
-
-                {/* Selected Direction Indicator */}
-                {isSelected && (
-                  <div className="w-2 h-2 bg-sky-600 rotate-45 mt-2 -mb-2 shadow-xs" />
-                )}
-              </button>
-            );
-          })}
+      {safeTimeline.length === 0 ? (
+        <div className="p-8 text-center bg-slate-50/80 rounded-2xl border border-dashed border-slate-200 text-xs text-slate-500">
+          No anomalous multi-signal timeline events detected for this patient. Baseline telemetry and pharmacy dispense intervals are within normal clinical thresholds.
         </div>
-      </div>
+      ) : (
+        <div className="relative overflow-x-auto pb-4 pt-3">
+          {/* Continuous Guide Line */}
+          <div className="absolute top-8 left-8 right-8 h-0.5 bg-gradient-to-r from-slate-200 via-sky-200 to-amber-200 -z-0" />
+
+          <div className="flex items-start justify-between min-w-[760px] gap-3 px-2">
+            {safeTimeline.map((event) => {
+              const isSelected = event.id === selectedEventId;
+              return (
+                <button
+                  key={event.id}
+                  onClick={() => setSelectedEventId(event.id)}
+                  className="flex flex-col items-center group relative cursor-pointer focus:outline-none flex-1 transition-all"
+                >
+                  {/* Milestone Node */}
+                  <div
+                    className={`w-11 h-11 rounded-2xl flex items-center justify-center border-2 transition-all duration-300 relative z-10 ${
+                      isSelected
+                        ? 'bg-sky-600 text-white border-sky-400 shadow-[0_0_16px_rgba(2,132,199,0.4)] scale-110'
+                        : event.isIrregularity
+                        ? 'bg-amber-50 text-amber-700 border-amber-300 group-hover:border-amber-400 group-hover:scale-105 shadow-2xs'
+                        : 'bg-white text-slate-600 border-slate-300/80 group-hover:border-sky-400 group-hover:scale-105 shadow-2xs'
+                    }`}
+                  >
+
+                    {/* Pulsing Alert Indicator */}
+                    {event.isIrregularity && !isSelected && (
+                      <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-500 rounded-full border-2 border-white shadow-xs animate-pulse" />
+                    )}
+                  </div>
+
+                  {/* Date & Title */}
+                  <div className="text-center mt-3 w-24">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight block">
+                      {event.displayDate}
+                    </span>
+                    <span
+                      className={`text-[11px] font-semibold leading-snug block truncate mt-0.5 ${
+                        isSelected
+                          ? 'text-sky-700 font-bold'
+                          : event.isIrregularity
+                          ? 'text-amber-800'
+                          : 'text-slate-700'
+                      }`}
+                      title={event.title}
+                    >
+                      {event.title}
+                    </span>
+                  </div>
+
+                  {/* Selected Direction Indicator */}
+                  {isSelected && (
+                    <div className="w-2 h-2 bg-sky-600 rotate-45 mt-2 -mb-2 shadow-xs" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Selected Event Deep-Dive Panel */}
       {selectedEvent && (

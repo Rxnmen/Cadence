@@ -18,9 +18,26 @@ interface UncertaintyPanelProps {
 export const UncertaintyPanel: React.FC<UncertaintyPanelProps> = ({
   confidence,
   confidenceScore = 64,
-  increases,
-  reduces,
+  increases = [],
+  reduces = [],
 }) => {
+  const safeIncreases =
+    increases && increases.length > 0
+      ? increases
+      : [
+          'Concordant pharmacy claims and refill cadence verification',
+          'Multi-day ambulatory telemonitoring blood pressure confirmation',
+          'Direct supportive patient follow-up and care coordinator review',
+        ];
+
+  const safeReduces =
+    reduces && reduces.length > 0
+      ? reduces
+      : [
+          'Recent documented dosage modification or physician titration order',
+          'Surplus medication or split-dose administration from previous fill',
+          'Regional distributor pharmacy backorder or insurance barrier',
+        ];
   return (
     <div className="bg-white rounded-2xl border border-slate-200/85 p-5 sm:p-6 shadow-2xs card-elevation-2 space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
@@ -77,7 +94,7 @@ export const UncertaintyPanel: React.FC<UncertaintyPanelProps> = ({
           </div>
 
           <ul className="space-y-2 text-slate-700">
-            {increases.map((item, idx) => (
+            {safeIncreases.map((item, idx) => (
               <li key={idx} className="flex items-start gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
                 <span className="leading-snug">{item}</span>
@@ -94,7 +111,7 @@ export const UncertaintyPanel: React.FC<UncertaintyPanelProps> = ({
           </div>
 
           <ul className="space-y-2 text-slate-700">
-            {reduces.map((item, idx) => (
+            {safeReduces.map((item, idx) => (
               <li key={idx} className="flex items-start gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-sky-500 mt-1.5 shrink-0" />
                 <span className="leading-snug">{item}</span>

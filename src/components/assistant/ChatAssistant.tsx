@@ -26,7 +26,7 @@ interface ChatMessage {
 }
 
 export const ChatAssistant: React.FC = () => {
-  const { selectedPatient, patients, openDetective } = useApp();
+  const { selectedPatient, patients, openDetective, doctor } = useApp();
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const suggestedPrompts = [
@@ -43,7 +43,7 @@ export const ChatAssistant: React.FC = () => {
     {
       id: 'm-1',
       sender: 'assistant',
-      text: `Hello Dr. Sharma. I am the Cadence Clinical Decision Assistant. I analyze routine multimodal signals (pharmacy claims, symptom logs, telemonitoring vitals, and wearables) across your authorized cohort to help connect subtle clinical clues.\n\nCurrently reviewing **${selectedPatient.name} (${selectedPatient.code})** — prescribed **${selectedPatient.primaryMedication.name}**. How can I assist your clinical review today?`,
+      text: `Hello, ${doctor.name || 'Doctor'}. I am the Cadence Clinical Decision Assistant. I analyze routine multimodal signals (pharmacy claims, symptom logs, telemonitoring vitals, and wearables) across your authorized cohort to help connect subtle clinical clues.\n\nCurrently reviewing **${selectedPatient.name} (${selectedPatient.code})** — prescribed **${selectedPatient.primaryMedication.name}**. How can I assist your clinical review today?`,
       timestamp: 'Just now',
     },
   ]);

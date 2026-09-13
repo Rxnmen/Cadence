@@ -158,8 +158,8 @@ export const InsightsView: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <UncertaintyPanel
           confidence={selectedPatient.confidence}
-          increases={selectedPatient.confidenceFactors.increases}
-          reduces={selectedPatient.confidenceFactors.reduces}
+          increases={selectedPatient.confidenceFactors?.increases || []}
+          reduces={selectedPatient.confidenceFactors?.reduces || []}
         />
         <AiSummaryCard
           initialSummary={selectedPatient.aiSummary}

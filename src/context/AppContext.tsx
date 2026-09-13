@@ -116,6 +116,7 @@ interface AppContextType {
   riskFilter: RiskFilterType;
   setRiskFilter: (filter: RiskFilterType) => void;
   filteredPatients: Patient[];
+  enrollPatient: (patient: Omit<Patient, 'id'> & { id?: string }) => void;
 
   // Modals
   detailsModalPatient: Patient | null;
@@ -233,12 +234,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setThemeState(newTheme);
   };
 
-  // Supabase Auth & Session State
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  // Supabase Auth & Session State with persistent storage
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    return localStorage.getItem('cadence_auth') === 'true';
+  });
   const [supabaseUser, setSupabaseUser] = useState<User | null>(null);
   const [supabaseSession, setSupabaseSession] = useState<Session | null>(null);
   const [isSupabaseReady] = useState<boolean>(isSupabaseConfigured());
-  const [doctor, setDoctor] = useState<DoctorProfile>(DEFAULT_DOCTOR);
+  const [doctor, setDoctorState] = useState<DoctorProfile>(() => {
+    const saved = localStorage.getItem('cadence_doctor');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        // pass
+      }
+    }
+    return DEFAULT_DOCTOR;
+  });
+
+  const setDoctor = useCallback(
+    (updater: DoctorProfile | ((prev: DoctorProfile) => DoctorProfile)) => {
+      setDoctorState((prev) => {
+        const next = typeof updater === 'function' ? updater(prev) : updater;
+        try {
+          localStorage.setItem('cadence_doctor', JSON.stringify(next));
+        } catch {
+          // pass
+        }
+        return next;
+      });
+    },
+    []
+  );
 
   // Real Supabase User Data
   const [userMedications, setUserMedications] = useState<SupabaseMedication[]>([]);
@@ -404,6 +432,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setSupabaseSession(session);
         setSupabaseUser(session.user);
         setIsAuthenticated(true);
+        localStorage.setItem('cadence_auth', 'true');
         const name =
           session.user.user_metadata?.full_name ||
           session.user.email?.split('@')[0] ||
@@ -419,11 +448,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setSupabaseSession(session);
       setSupabaseUser(session?.user || null);
       if (session) {
         setIsAuthenticated(true);
+        localStorage.setItem('cadence_auth', 'true');
         const name =
           session.user.user_metadata?.full_name ||
           session.user.email?.split('@')[0] ||
@@ -434,8 +464,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           email: session.user.email || prev.email,
         }));
         fetchSupabaseData(session.user.id);
-      } else {
+      } else if (event === 'SIGNED_OUT') {
         setIsAuthenticated(false);
+        localStorage.removeItem('cadence_auth');
+        localStorage.removeItem('cadence_doctor');
+        localStorage.removeItem('cadence_active_view');
         setUserMedications([]);
         setMedicationLogs([]);
         setUserSymptoms([]);
@@ -445,14 +478,106 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => {
       subscription.unsubscribe();
     };
-  }, [isSupabaseReady, fetchSupabaseData]);
+  }, [isSupabaseReady, fetchSupabaseData, setDoctor]);
 
-  // Primary navigation tab
-  const [activeView, setActiveView] = useState<ActiveView>('patients');
+  // Primary navigation tab with URL hash / localStorage persistence
+  const getInitialView = (): ActiveView => {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const hash = window.location.hash.replace('#', '') as ActiveView;
+      const validViews: ActiveView[] = [
+        'patients',
+        'ai-assistants',
+        'analytics',
+        'settings',
+        'dashboard',
+        'insights',
+        'alerts',
+        'assistant',
+        'data-sources',
+        'reports',
+      ];
+      if (validViews.includes(hash)) return hash;
+    }
+    const saved = localStorage.getItem('cadence_active_view') as ActiveView;
+    const validViews: ActiveView[] = [
+      'patients',
+      'ai-assistants',
+      'analytics',
+      'settings',
+      'dashboard',
+      'insights',
+      'alerts',
+      'assistant',
+      'data-sources',
+      'reports',
+    ];
+    if (validViews.includes(saved)) return saved;
+    return 'patients';
+  };
+
+  const [activeView, setActiveViewState] = useState<ActiveView>(getInitialView);
+
+  const setActiveView = (view: ActiveView) => {
+    setActiveViewState(view);
+    localStorage.setItem('cadence_active_view', view);
+    try {
+      window.location.hash = view;
+    } catch {
+      // pass
+    }
+  };
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '') as ActiveView;
+      const validViews: ActiveView[] = [
+        'patients',
+        'ai-assistants',
+        'analytics',
+        'settings',
+        'dashboard',
+        'insights',
+        'alerts',
+        'assistant',
+        'data-sources',
+        'reports',
+      ];
+      if (validViews.includes(hash)) {
+        setActiveViewState(hash);
+        localStorage.setItem('cadence_active_view', hash);
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
   const [dateFilter, setDateFilter] = useState<DateFilter>('7d');
 
-  // Patients data
-  const [patients] = useState<Patient[]>(ANTIGRAVITY_PATIENTS);
+  // Patients data: custom enrolled + clinical telemetry cohort
+  const [customPatients, setCustomPatients] = useState<Patient[]>(() => {
+    const saved = localStorage.getItem('cadence_custom_patients');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        // pass
+      }
+    }
+    return [];
+  });
+
+  const patients = [...customPatients, ...ANTIGRAVITY_PATIENTS];
+
+  const enrollPatient = (newPatientData: Omit<Patient, 'id'> & { id?: string }) => {
+    const id = newPatientData.id || `pt-custom-${Date.now()}`;
+    const newPatient: Patient = {
+      ...newPatientData,
+      id,
+    } as Patient;
+    const updated = [newPatient, ...customPatients];
+    setCustomPatients(updated);
+    localStorage.setItem('cadence_custom_patients', JSON.stringify(updated));
+  };
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [riskFilter, setRiskFilter] = useState<RiskFilterType>('all');
 
@@ -582,12 +707,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   ): Promise<{ error?: string }> => {
     if (!isSupabaseReady) {
       // Demo fallback
-      setDoctor({
+      const newDoctor: DoctorProfile = {
         ...DEFAULT_DOCTOR,
         name: fullName || 'Dr. Registered User',
         email,
-      });
+      };
+      setDoctor(newDoctor);
       setIsAuthenticated(true);
+      localStorage.setItem('cadence_auth', 'true');
+      localStorage.setItem('cadence_doctor', JSON.stringify(newDoctor));
       return {};
     }
 
@@ -608,6 +736,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setSupabaseSession(data.session);
         setSupabaseUser(data.user);
         setIsAuthenticated(true);
+        localStorage.setItem('cadence_auth', 'true');
+        const name = fullName || data.user?.email?.split('@')[0] || 'Dr. Clinical User';
+        setDoctor((prev) => ({
+          ...prev,
+          name,
+          email: data.user?.email || prev.email,
+        }));
         if (data.user) {
           fetchSupabaseData(data.user.id);
         }
@@ -624,11 +759,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   ): Promise<{ error?: string }> => {
     if (!isSupabaseReady) {
       // Demo fallback
-      setDoctor({
+      const newDoctor: DoctorProfile = {
         ...DEFAULT_DOCTOR,
         email,
-      });
+      };
+      setDoctor(newDoctor);
       setIsAuthenticated(true);
+      localStorage.setItem('cadence_auth', 'true');
+      localStorage.setItem('cadence_doctor', JSON.stringify(newDoctor));
       return {};
     }
 
@@ -644,6 +782,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setSupabaseSession(data.session);
         setSupabaseUser(data.user);
         setIsAuthenticated(true);
+        localStorage.setItem('cadence_auth', 'true');
+        const name =
+          data.user?.user_metadata?.full_name ||
+          data.user?.email?.split('@')[0] ||
+          'Dr. Clinical User';
+        setDoctor((prev) => ({
+          ...prev,
+          name,
+          email: data.user?.email || prev.email,
+        }));
         if (data.user) {
           fetchSupabaseData(data.user.id);
         }
@@ -657,6 +805,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const loginDemo = () => {
     setDoctor(DEFAULT_DOCTOR);
     setIsAuthenticated(true);
+    localStorage.setItem('cadence_auth', 'true');
+    localStorage.setItem('cadence_doctor', JSON.stringify(DEFAULT_DOCTOR));
     setActiveView('patients');
   };
 
@@ -671,6 +821,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setSupabaseSession(null);
     setSupabaseUser(null);
     setIsAuthenticated(false);
+    localStorage.removeItem('cadence_auth');
+    localStorage.removeItem('cadence_doctor');
+    localStorage.removeItem('cadence_active_view');
     setUserMedications([]);
     setMedicationLogs([]);
     setUserSymptoms([]);
@@ -945,6 +1098,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         riskFilter,
         setRiskFilter,
         filteredPatients,
+        enrollPatient,
         detailsModalPatient,
         openPatientDetails,
         closePatientDetails,

@@ -13,7 +13,9 @@ interface WhatChangedCardProps {
   baseline: BaselineComparison[];
 }
 
-export const WhatChangedCard: React.FC<WhatChangedCardProps> = ({ baseline }) => {
+export const WhatChangedCard: React.FC<WhatChangedCardProps> = ({ baseline = [] }) => {
+  const safeBaseline = baseline && baseline.length > 0 ? baseline : [];
+
   return (
     <div className="bg-white rounded-2xl border border-slate-200/85 p-5 sm:p-6 shadow-2xs card-elevation-2 space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
@@ -40,8 +42,13 @@ export const WhatChangedCard: React.FC<WhatChangedCardProps> = ({ baseline }) =>
       </div>
 
       {/* Baseline Comparison Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {baseline.map((item, idx) => {
+      {safeBaseline.length === 0 ? (
+        <div className="p-8 text-center bg-slate-50/80 rounded-2xl border border-dashed border-slate-200 text-xs text-slate-500">
+          All continuous telemetry metrics and dispense cadence match this patient's verified 6-month historical baseline.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {safeBaseline.map((item, idx) => {
           const isConcerning = item.status === 'concerning';
           const isBorderline = item.status === 'borderline';
 
@@ -114,6 +121,7 @@ export const WhatChangedCard: React.FC<WhatChangedCardProps> = ({ baseline }) =>
           );
         })}
       </div>
+      )}
     </div>
   );
 };

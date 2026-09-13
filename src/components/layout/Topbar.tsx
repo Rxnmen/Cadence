@@ -32,6 +32,21 @@ export const Topbar: React.FC<TopbarProps> = ({ onOpenMobileMenu }) => {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState<boolean>(false);
   const pendingAlerts = alerts.filter((a) => a.status === 'pending').length;
 
+  const isMac =
+    typeof navigator !== 'undefined' &&
+    /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform || navigator.userAgent || '');
+
+  const isDemoDoctor = doctor.name.toLowerCase().includes('rajesh sharma');
+  const getDoctorInitials = (name: string) => {
+    const clean = name.replace(/^Dr\.\s*/i, '').trim();
+    const parts = clean.split(/\s+/);
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+    }
+    return clean.slice(0, 2).toUpperCase() || 'DR';
+  };
+  const doctorInitials = getDoctorInitials(doctor.name);
+
   // Global keyboard shortcut for Cmd+K / Ctrl+K
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -112,12 +127,18 @@ export const Topbar: React.FC<TopbarProps> = ({ onOpenMobileMenu }) => {
             >
               <Search className="w-3.5 h-3.5 text-cyan-500" />
               <span>Search patients or actions...</span>
-              <kbd className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-mono border ${
+              <kbd className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono border ${
                 theme === 'dark'
                   ? 'bg-slate-800 text-slate-400 border-slate-700'
                   : 'bg-white text-slate-500 border-slate-200'
               }`}>
-                <Command className="w-2.5 h-2.5" /> K
+                {isMac ? (
+                  <>
+                    <Command className="w-2.5 h-2.5" /> K
+                  </>
+                ) : (
+                  <span>Ctrl + K</span>
+                )}
               </kbd>
             </button>
 
@@ -170,15 +191,20 @@ export const Topbar: React.FC<TopbarProps> = ({ onOpenMobileMenu }) => {
                 : 'bg-slate-50 border-slate-200/90'
             }`}>
               <div className="relative">
-                <img
-                  src={doctor.avatarUrl}
-                  alt={doctor.name}
-                  className="w-8 h-8 rounded-xl object-cover ring-2 ring-cyan-500/40"
-                  onError={(e) => {
-                    // Fallback to avatar icon
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
+                {isDemoDoctor && doctor.avatarUrl ? (
+                  <img
+                    src={doctor.avatarUrl}
+                    alt={doctor.name}
+                    className="w-8 h-8 rounded-xl object-cover ring-2 ring-cyan-500/40"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-600 to-indigo-600 text-white font-black text-[11px] flex items-center justify-center ring-2 ring-cyan-500/40 shadow-xs">
+                    {doctorInitials}
+                  </div>
+                )}
                 <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-slate-900" />
               </div>
 

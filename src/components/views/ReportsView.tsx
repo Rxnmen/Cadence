@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 
 export const ReportsView: React.FC = () => {
-  const { selectedPatient, patients, setSelectedPatientId } = useApp();
+  const { selectedPatient, patients, setSelectedPatientId, doctor } = useApp();
   const [reportDate] = useState<string>('May 9, 2026');
 
   const handlePrint = () => {
@@ -80,7 +80,7 @@ export const ReportsView: React.FC = () => {
             </div>
             <div className="font-bold text-slate-900 text-sm">Case Reference: CAD-{selectedPatient.code}-2026</div>
             <div>Date of Analysis: <strong className="text-slate-800 font-medium">{reportDate}</strong></div>
-            <div>Reviewing Clinician: <strong className="text-slate-800">Dr. Maya Sharma, MD</strong> (NPI: 8829104812)</div>
+            <div>Reviewing Clinician: <strong className="text-slate-800">{doctor.name}</strong> (NPI: {doctor.npi})</div>
           </div>
         </div>
 
@@ -214,7 +214,7 @@ export const ReportsView: React.FC = () => {
             <div className="space-y-1.5">
               <div className="w-56 border-b border-slate-400" />
               <span className="text-[10px] text-slate-400 block uppercase font-medium">Attending Clinician Attestation & Signature</span>
-              <span className="font-bold text-slate-900 text-sm">Dr. Maya Sharma, MD</span>
+              <span className="font-bold text-slate-900 text-sm">{doctor.name}</span>
             </div>
 
             <div className="text-right text-[10px] text-slate-400 font-mono">

@@ -15,13 +15,14 @@ interface AlternativeExplanationEngineProps {
 }
 
 export const AlternativeExplanationEngine: React.FC<AlternativeExplanationEngineProps> = ({
-  explanations,
+  explanations = [],
 }) => {
+  const safeExplanations = explanations && explanations.length > 0 ? explanations : [];
   const [selectedHypothesis, setSelectedHypothesis] = useState<string>(
-    explanations.find((e) => e.isPrimaryCandidate)?.id || explanations[0]?.id || ''
+    safeExplanations.find((e) => e.isPrimaryCandidate)?.id || safeExplanations[0]?.id || ''
   );
 
-  const primaryCandidate = explanations.find((e) => e.isPrimaryCandidate);
+  const primaryCandidate = safeExplanations.find((e) => e.isPrimaryCandidate);
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200/85 p-5 sm:p-6 shadow-2xs card-elevation-2 space-y-5">
@@ -137,8 +138,13 @@ export const AlternativeExplanationEngine: React.FC<AlternativeExplanationEngine
           All Evaluated Confounder Hypotheses:
         </span>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {explanations.map((exp) => {
+        {safeExplanations.length === 0 ? (
+          <div className="p-8 text-center bg-slate-50/80 rounded-2xl border border-dashed border-slate-200 text-xs text-slate-500">
+            No confounding clinical hypotheses detected. Observational telemetry and pharmacy claims reflect standard primary treatment response.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {safeExplanations.map((exp) => {
             const isSelected = selectedHypothesis === exp.id;
             return (
               <div
@@ -180,6 +186,7 @@ export const AlternativeExplanationEngine: React.FC<AlternativeExplanationEngine
             );
           })}
         </div>
+        )}
       </div>
     </div>
   );

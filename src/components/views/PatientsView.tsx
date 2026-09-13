@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { TiltCard } from '../common/TiltCard';
 import { PatientDetailsModal } from '../patients/PatientDetailsModal';
@@ -21,7 +21,9 @@ import {
   TrendingUp,
   ShieldCheck,
   Zap,
+  UserPlus,
 } from 'lucide-react';
+import { Patient } from '../../types/patient';
 
 export const PatientsView: React.FC = () => {
   const {
@@ -37,8 +39,156 @@ export const PatientsView: React.FC = () => {
     assessmentModal,
     runAiAssessment,
     closeAssessmentModal,
+    enrollPatient,
+    doctor,
     theme,
   } = useApp();
+
+  // Enroll Patient Modal State
+  const [isEnrollModalOpen, setIsEnrollModalOpen] = useState<boolean>(false);
+  const [newPatientName, setNewPatientName] = useState<string>('');
+  const [newPatientAge, setNewPatientAge] = useState<number>(54);
+  const [newPatientGender, setNewPatientGender] = useState<'Female' | 'Male' | 'Other'>('Male');
+  const [newPatientCondition, setNewPatientCondition] = useState<string>('Essential Hypertension');
+  const [newPatientMed, setNewPatientMed] = useState<string>('Telmisartan 40mg');
+  const [newPatientBP, setNewPatientBP] = useState<string>('138/86 mmHg');
+  const [newPatientHR, setNewPatientHR] = useState<number>(76);
+  const [newPatientSpO2, setNewPatientSpO2] = useState<number>(98);
+  const [newPatientRisk, setNewPatientRisk] = useState<'High' | 'Moderate' | 'Low'>('Moderate');
+
+  const handleEnrollSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPatientName.trim()) return;
+
+    const parts = newPatientName.trim().split(/\s+/);
+    const initials =
+      parts.length >= 2
+        ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+        : newPatientName.slice(0, 2).toUpperCase();
+
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    const code = `CAD-${randomNum}`;
+    const riskScore = newPatientRisk === 'High' ? 82 : newPatientRisk === 'Moderate' ? 66 : 28;
+    const riskCategory =
+      newPatientRisk === 'High'
+        ? 'High Priority'
+        : newPatientRisk === 'Moderate'
+        ? 'Moderate Concern'
+        : 'Stable / Low Concern';
+
+    const newPatient: Patient = {
+      id: `pt-${randomNum}`,
+      code,
+      patientId: code,
+      initials,
+      name: newPatientName.trim(),
+      age: newPatientAge,
+      gender: newPatientGender,
+      condition: newPatientCondition,
+      riskScore,
+      riskCategory,
+      riskLevel: newPatientRisk,
+      riskTrend: 'stable',
+      confidence: 'Moderate',
+      lastReviewed: 'Just enrolled',
+      lastVisitDate: 'Today',
+      signalsCount: 3,
+      vitalSigns: {
+        bp: newPatientBP,
+        heartRate: newPatientHR,
+        spo2: newPatientSpO2,
+        bloodGlucose: '110 mg/dL',
+        temp: '98.6°F',
+      },
+      patientHistory: [
+        `2026: Admitted to ${doctor.name}'s clinical telemetry cohort`,
+        `Initiated maintenance pharmacotherapy: ${newPatientMed}`,
+      ],
+      currentMedicationsList: [
+        {
+          name: newPatientMed,
+          dosage: newPatientMed.split(' ')[1] || 'Standard',
+          frequency: 'Once daily',
+          route: 'Oral',
+        },
+      ],
+      aiDiagnosticNotes: `Newly admitted patient with ${newPatientCondition}. Ambulatory telemetry active. Baseline vitals: BP ${newPatientBP}, HR ${newPatientHR} bpm. Initial multi-signal surveillance initialized.`,
+      primaryMedication: {
+        id: `med-${Date.now()}`,
+        name: newPatientMed,
+        genericName: newPatientMed.split(' ')[0],
+        dosage: newPatientMed.split(' ')[1] || 'Daily dose',
+        frequency: 'Once daily',
+        route: 'Oral tablet',
+        prescribingProvider: doctor.name,
+        startDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+        indication: newPatientCondition,
+        history: [],
+      },
+      contributingSignals: [
+        {
+          id: `sig-enr-1`,
+          name: 'Baseline Vitals Synced',
+          category: 'Clinical Data',
+          weightPercentage: 40,
+          description: `Initial tele-monitoring stream calibrated: BP ${newPatientBP}, HR ${newPatientHR} bpm.`,
+          strength: 'Moderate',
+          detectedDate: 'Today',
+          valueDescription: newPatientBP,
+        },
+        {
+          id: `sig-enr-2`,
+          name: 'Telemetry Surveillance',
+          category: 'EHR / History',
+          weightPercentage: 35,
+          description: 'EHR HL7 FHIR stream connected for remote vitals and pharmacy claims integration.',
+          strength: 'Strong',
+          detectedDate: 'Today',
+          valueDescription: 'Active Telemetry',
+        },
+      ],
+      timeline: [
+        {
+          id: `tl-enr-1`,
+          date: new Date().toISOString().split('T')[0],
+          displayDate: 'Today',
+          title: 'Patient Enrolled into Clinical Cohort',
+          source: 'EHR / History',
+          expectedValue: 'Admit to clinical surveillance',
+          observedValue: `Initiated on ${newPatientMed}`,
+          interpretation: `Authorized patient enrolled under ${doctor.name}. Continuous telemetry initialized.`,
+          confidence: 'High',
+          iconType: 'prescription',
+        },
+      ],
+      baseline: [
+        {
+          metricName: 'Systolic / Diastolic BP',
+          category: 'Clinical Data',
+          normalBaseline: '120/80 mmHg',
+          currentObserved: newPatientBP,
+          status: newPatientRisk === 'High' ? 'concerning' : 'normal',
+          deltaDirection: newPatientRisk === 'High' ? 'up' : 'stable',
+          deltaText: newPatientRisk === 'High' ? 'Elevated baseline' : 'Target baseline',
+          explanation: `Patient initial vitals under active telemetry monitoring.`,
+        },
+      ],
+      alternativeExplanations: [],
+      refillHistory: [],
+      symptomHistory: [],
+      clinicalMeasurements: [],
+      wearablesData: [],
+      aiSummary: `${newPatientName} admitted to clinical care cohort. Real-time telemetry signals active with initial risk score of ${riskScore}/100.`,
+      confidenceFactors: {
+        increases: ['Clinical admission verification confirmed', 'Direct tele-cuff calibration verified'],
+        reduces: ['Awaiting 14-day longitudinal observation data window'],
+      },
+    };
+
+    enrollPatient(newPatient);
+    setIsEnrollModalOpen(false);
+    setNewPatientName('');
+  };
 
   const totalCount = patients.length;
   const highCount = patients.filter((p) => p.riskLevel === 'High' || p.riskCategory === 'High Priority').length;
@@ -63,6 +213,194 @@ export const PatientsView: React.FC = () => {
         />
       )}
 
+      {/* Enroll New Patient Modal */}
+      {isEnrollModalOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn"
+          onClick={() => setIsEnrollModalOpen(false)}
+        >
+          <div
+            className={`w-full max-w-lg rounded-3xl border shadow-2xl p-6 space-y-5 transition-all ${
+              theme === 'dark' ? 'bg-[#0f172a] border-slate-800 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800/80">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center text-white shadow-xs">
+                  <UserPlus className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold tracking-tight">Enroll Patient into Clinical Roster</h3>
+                  <p className="text-[11px] text-slate-400">
+                    Admit patient into {doctor.name}'s telemetry surveillance cohort
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsEnrollModalOpen(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEnrollSubmit} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-300">Patient Full Name</label>
+                <input
+                  type="text"
+                  required
+                  value={newPatientName}
+                  onChange={(e) => setNewPatientName(e.target.value)}
+                  placeholder="e.g. Ramesh Kulkarni"
+                  className={`w-full px-3.5 py-2 rounded-xl text-xs border focus:outline-none focus:ring-2 focus:ring-cyan-500 ${
+                    theme === 'dark' ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
+                  }`}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Age</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="120"
+                    value={newPatientAge}
+                    onChange={(e) => setNewPatientAge(Number(e.target.value))}
+                    className={`w-full px-3.5 py-2 rounded-xl text-xs border focus:outline-none focus:ring-2 focus:ring-cyan-500 ${
+                      theme === 'dark' ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
+                    }`}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Gender</label>
+                  <select
+                    value={newPatientGender}
+                    onChange={(e) => setNewPatientGender(e.target.value as any)}
+                    className={`w-full px-3.5 py-2 rounded-xl text-xs border focus:outline-none focus:ring-2 focus:ring-cyan-500 ${
+                      theme === 'dark' ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
+                    }`}
+                  >
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-300">Primary Clinical Condition</label>
+                <input
+                  type="text"
+                  required
+                  value={newPatientCondition}
+                  onChange={(e) => setNewPatientCondition(e.target.value)}
+                  placeholder="e.g. Stage 2 Hypertension & CKD"
+                  className={`w-full px-3.5 py-2 rounded-xl text-xs border focus:outline-none focus:ring-2 focus:ring-cyan-500 ${
+                    theme === 'dark' ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
+                  }`}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-300">Primary Medication & Dosage</label>
+                <input
+                  type="text"
+                  required
+                  value={newPatientMed}
+                  onChange={(e) => setNewPatientMed(e.target.value)}
+                  placeholder="e.g. Telmisartan 40mg once daily"
+                  className={`w-full px-3.5 py-2 rounded-xl text-xs border focus:outline-none focus:ring-2 focus:ring-cyan-500 ${
+                    theme === 'dark' ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
+                  }`}
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 text-xs">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-300">Baseline BP</label>
+                  <input
+                    type="text"
+                    value={newPatientBP}
+                    onChange={(e) => setNewPatientBP(e.target.value)}
+                    placeholder="138/86"
+                    className={`w-full px-2.5 py-1.5 rounded-xl border text-xs ${
+                      theme === 'dark' ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'
+                    }`}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-300">Heart Rate (bpm)</label>
+                  <input
+                    type="number"
+                    value={newPatientHR}
+                    onChange={(e) => setNewPatientHR(Number(e.target.value))}
+                    className={`w-full px-2.5 py-1.5 rounded-xl border text-xs ${
+                      theme === 'dark' ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'
+                    }`}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-300">SpO2 (%)</label>
+                  <input
+                    type="number"
+                    value={newPatientSpO2}
+                    onChange={(e) => setNewPatientSpO2(Number(e.target.value))}
+                    className={`w-full px-2.5 py-1.5 rounded-xl border text-xs ${
+                      theme === 'dark' ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'
+                    }`}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-300">Decompensation Risk Stratification</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(['High', 'Moderate', 'Low'] as const).map((lvl) => (
+                    <button
+                      type="button"
+                      key={lvl}
+                      onClick={() => setNewPatientRisk(lvl)}
+                      className={`py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                        newPatientRisk === lvl
+                          ? lvl === 'High'
+                            ? 'bg-rose-500/20 text-rose-300 border-rose-500'
+                            : lvl === 'Moderate'
+                            ? 'bg-amber-500/20 text-amber-300 border-amber-500'
+                            : 'bg-emerald-500/20 text-emerald-300 border-emerald-500'
+                          : theme === 'dark'
+                          ? 'bg-slate-900 text-slate-400 border-slate-800'
+                          : 'bg-slate-50 text-slate-600 border-slate-200'
+                      }`}
+                    >
+                      {lvl} Priority
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsEnrollModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-cyan-500/20 cursor-pointer active:scale-95 transition-all"
+                >
+                  Enroll Patient into Cohort
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Header Banner */}
       <div className={`relative overflow-hidden p-6 rounded-3xl border backdrop-blur-md transition-all duration-300 ${
         theme === 'dark'
@@ -78,18 +416,31 @@ export const PatientsView: React.FC = () => {
                 <Users className="w-5 h-5" />
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl font-black tracking-tight">
-                  Patient Management & Clinical Roster
-                </h1>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-xl sm:text-2xl font-black tracking-tight">
+                    Patient Management & Clinical Roster
+                  </h1>
+                  <span className="hidden sm:inline-flex text-[10px] font-bold font-mono px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800/60">
+                    Apollo Ward 4B Telemetry Cohort
+                  </span>
+                </div>
                 <p className={`text-xs mt-0.5 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-                  Real-time ambulatory telemetry, decompensation risk stratification, and AI decision-support for authorized patients.
+                  Assigned Telemetry Cohort under <strong>{doctor.name}</strong>. Continuous ambulatory vitals, decompensation risk stratification, and AI decision-support.
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Quick Metrics Bar */}
+          {/* Quick Metrics Bar + Enroll Action */}
           <div className="flex items-center gap-2 flex-wrap text-xs">
+            <button
+              onClick={() => setIsEnrollModalOpen(true)}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-cyan-500/20 cursor-pointer active:scale-95 transition-all"
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              <span>+ Enroll Patient</span>
+            </button>
+
             <div className={`px-3 py-1.5 rounded-xl border font-semibold flex items-center gap-1.5 ${
               theme === 'dark' ? 'bg-slate-800/80 border-slate-700 text-slate-200' : 'bg-slate-50 border-slate-200 text-slate-700'
             }`}>
