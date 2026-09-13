@@ -57,7 +57,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({ isOpen, onClose }) => {
               <Atom className="w-5 h-5" />
             </div>
             <span className="font-black text-sm tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400">
-              ANTI-GRAVITY
+              CADENCE
             </span>
           </div>
           <button

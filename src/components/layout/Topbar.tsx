@@ -80,7 +80,7 @@ export const Topbar: React.FC<TopbarProps> = ({ onOpenMobileMenu }) => {
               <div className="hidden sm:block">
                 <div className="flex items-center gap-1.5">
                   <span className="font-extrabold text-sm tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-400 to-indigo-400">
-                    Anti-Gravity
+                    Cadence
                   </span>
                   <span className={`text-[10px] font-bold tracking-wider uppercase px-1.5 py-0.2 rounded border ${
                     theme === 'dark'
@@ -200,7 +200,7 @@ export const Topbar: React.FC<TopbarProps> = ({ onOpenMobileMenu }) => {
                   ? 'bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border-rose-800/60'
                   : 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200'
               }`}
-              title="Sign Out of Anti-Gravity Platform"
+              title="Sign Out of Cadence Platform"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Logout</span>

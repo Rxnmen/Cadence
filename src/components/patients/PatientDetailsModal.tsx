@@ -179,7 +179,7 @@ export const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
                   <span className="text-[11px] font-mono text-cyan-400 font-semibold">{patient.condition}</span>
                 </div>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  {patient.aiSummary || 'Patient is enrolled in the Anti-Gravity AI Longitudinal Telemetry Cohort.'}
+                  {patient.aiSummary || 'Patient is enrolled in the Cadence AI Longitudinal Telemetry Cohort.'}
                 </p>
               </div>
             </div>
@@ -264,7 +264,7 @@ export const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-cyan-400 font-bold text-xs">
                 <Brain className="w-4 h-4" />
-                <span>Anti-Gravity Neural Diagnostic Synthesis</span>
+                <span>Cadence Neural Diagnostic Synthesis</span>
               </div>
 
               <div className={`p-5 rounded-2xl border space-y-3 ${
@@ -276,7 +276,7 @@ export const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
 
                 <div className="pt-3 border-t border-cyan-900/40 flex items-center justify-between text-[11px] text-slate-400">
                   <span>Confidence Rating: <strong className="text-cyan-400">98.4% (Multi-Signal Verified)</strong></span>
-                  <span>Model: Anti-Gravity Clinical Core v3.0</span>
+                  <span>Model: Cadence Clinical Core v3.0</span>
                 </div>
               </div>
             </div>

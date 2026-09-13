@@ -129,7 +129,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className = '', onItemClick })
           </div>
           <div>
             <span className="font-black text-sm tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-400 to-indigo-400 block">
-              ANTI-GRAVITY
+              CADENCE
             </span>
             <span className={`text-[10px] uppercase font-bold tracking-widest block ${
               theme === 'dark' ? 'text-slate-400' : 'text-slate-500'

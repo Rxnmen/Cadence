@@ -90,21 +90,23 @@ interface AppContextType {
 }
 
 const DEFAULT_DOCTOR: DoctorProfile = {
-  name: 'Dr. Sarah Jenkins',
-  email: 'sarah.jenkins@antigravity-health.ai',
-  avatarUrl: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=256',
-  role: 'Attending Physician & Clinical Director',
-  hospital: 'Metropolitan Academic Health System',
-  npi: '1849204812',
-  department: 'Internal Medicine & Cardiopulmonary Care',
+  name: 'Dr. Rajesh Sharma, MD',
+  email: 'dr.rajesh.sharma@cadence-health.ai',
+  avatarUrl: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=256',
+  role: 'Chief Medical Officer & Attending Physician',
+  hospital: 'Apollo Indraprastha Specialty Hospital',
+  npi: '8829104812',
+  department: 'Internal Medicine & Cardiovascular Care',
+  specialty: 'Cardiology & Internal Medicine',
+  clinicAffiliation: 'All India Institute of Medical Sciences (AIIMS) Affiliate Network',
 };
 
 const INITIAL_ALERTS: AlertItem[] = [
   {
     id: 'alt-1',
     patientId: 'pt-1042',
-    patientName: 'Elena Rostova',
-    patientCode: 'AG-1042',
+    patientName: 'Sunita Deshmukh',
+    patientCode: 'CAD-1042',
     medicationName: 'Lisinopril (10 mg daily)',
     riskScore: 72,
     severity: 'Moderate',
@@ -116,8 +118,8 @@ const INITIAL_ALERTS: AlertItem[] = [
   {
     id: 'alt-2',
     patientId: 'pt-2089',
-    patientName: 'Marcus Vance',
-    patientCode: 'AG-2089',
+    patientName: 'Vikram Malhotra',
+    patientCode: 'CAD-2089',
     medicationName: 'Empagliflozin (25 mg daily)',
     riskScore: 84,
     severity: 'High',
@@ -129,8 +131,8 @@ const INITIAL_ALERTS: AlertItem[] = [
   {
     id: 'alt-3',
     patientId: 'pt-5503',
-    patientName: 'Amara Okafor',
-    patientCode: 'AG-5503',
+    patientName: 'Kavita Sundaram',
+    patientCode: 'CAD-5503',
     medicationName: 'Advair Diskus (250/50 mcg)',
     riskScore: 78,
     severity: 'High',
@@ -142,8 +144,8 @@ const INITIAL_ALERTS: AlertItem[] = [
   {
     id: 'alt-4',
     patientId: 'pt-4412',
-    patientName: 'David K. Patel',
-    patientCode: 'AG-4412',
+    patientName: 'Devendra Patel',
+    patientCode: 'CAD-4412',
     medicationName: 'Spironolactone (25 mg daily)',
     riskScore: 88,
     severity: 'High',
@@ -157,9 +159,9 @@ const INITIAL_ALERTS: AlertItem[] = [
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Theme state: default to 'dark' for futuristic anti-gravity look, persist to localStorage
+  // Theme state: default to 'dark' for futuristic Cadence medical look, persist to localStorage
   const [theme, setThemeState] = useState<ThemeMode>(() => {
-    const saved = localStorage.getItem('antigravity_theme');
+    const saved = localStorage.getItem('cadence_theme') || localStorage.getItem('antigravity_theme');
     if (saved === 'light' || saved === 'dark') return saved;
     return 'dark';
   });
@@ -172,7 +174,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } else {
       root.classList.remove('dark');
     }
-    localStorage.setItem('antigravity_theme', theme);
+    localStorage.setItem('cadence_theme', theme);
   }, [theme]);
 
   const toggleTheme = () => {
@@ -262,7 +264,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         prev
           ? {
               ...prev,
-              stepText: 'Synthesizing Anti-Gravity Decompensation Matrix & recommendations...',
+              stepText: 'Synthesizing Cadence Decompensation Matrix & recommendations...',
               progress: 88,
             }
           : null

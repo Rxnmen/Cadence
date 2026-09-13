@@ -51,20 +51,20 @@ export const AiAssistantsView: React.FC = () => {
   // 1. AI CLINICAL ASSISTANT (CHAT) STATE
   // ==========================================
   const suggestedPrompts = [
-    "Summarize Patient #4's history",
+    "Summarize Devendra Patel's history (CAD-4412)",
     'Suggest treatment plan for Stage 2 Hypertension',
     'Evaluate SGLT2 inhibitor risks in CKD Stage 3',
-    "Compare Elena Rostova's current BP against 6mo baseline",
-    "What alternative confounders explain Marcus Vance's glucose spike?",
+    "Compare Sunita Deshmukh's current BP against 6mo baseline",
+    "What alternative confounders explain Vikram Malhotra's glucose spike?",
   ];
 
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'm-1',
       sender: 'assistant',
-      text: `Greetings, Dr. Jenkins. I am the **Anti-Gravity Clinical Decision Copilot v3.0**. I continuously cross-reference real-time patient vitals, telemetry streams, pharmacy claims, and longitudinal EHR encounters.\n\nCurrently monitoring **${patients.length} active patients** across your clinical roster. How may I assist your diagnostic review today?`,
+      text: `Greetings, Dr. Sharma. I am the **Cadence Clinical Decision Copilot v3.0**. I continuously cross-reference real-time patient vitals, telemetry streams, pharmacy claims, and longitudinal EHR encounters.\n\nCurrently monitoring **${patients.length} active patients** across your clinical roster. How may I assist your diagnostic review today?`,
       timestamp: 'Just now',
-      sources: ['Anti-Gravity Neural Core', 'EHR HL7 FHIR Stream'],
+      sources: ['Cadence Neural Core', 'EHR HL7 FHIR Stream'],
     },
   ]);
 
@@ -75,8 +75,8 @@ export const AiAssistantsView: React.FC = () => {
   const generateAnswer = (query: string): { text: string; sources: string[] } => {
     const q = query.toLowerCase();
 
-    if (q.includes('patient #4') || q.includes('david') || q.includes('patel')) {
-      const p4 = patients.find((p) => p.code === 'AG-4412') || patients[3];
+    if (q.includes('patient #4') || q.includes('devendra') || q.includes('patel')) {
+      const p4 = patients.find((p) => p.code === 'CAD-4412') || patients[3];
       return {
         text: `**Clinical Synthesis for ${p4.name} (${p4.code}):**\n\n• **Primary Condition:** ${p4.condition}\n• **Current Vitals:** BP ${p4.vitalSigns?.bp}, Heart Rate ${p4.vitalSigns?.heartRate} bpm, SpO2 ${p4.vitalSigns?.spo2}%\n• **Decompensation Risk:** **${p4.riskScore}/100 (${p4.riskLevel} Priority)**\n\n**Key Alerts & Longitudinal Findings:**\n1. **Severe Hypertensive Excursion:** Ambulatory tele-BP spiked to 162/102 mmHg over the past 48 hours (+18 mmHg over baseline).\n2. **Serum Potassium Warning:** Most recent lab reflects K+ at 5.4 mEq/L alongside rising creatinine (1.9 to 2.2 mg/dL).\n3. **Drug Interaction Flag:** Concurrent administration of Spironolactone 25mg with worsening renal filtration carries high risk of hyperkalemic dysrhythmia.\n\n**Recommendation:** Immediate in-person or urgent tele-nephrology evaluation; withhold potassium-sparing diuretics pending repeat electrolyte panel within 24 hours.`,
         sources: ['LabCorp Biomarkers', 'Ambulatory Tele-BP', 'EHR Medication Administration'],
@@ -86,7 +86,7 @@ export const AiAssistantsView: React.FC = () => {
     if (q.includes('hypertension') || q.includes('treatment plan') || q.includes('stage 2')) {
       return {
         text: `**Evidence-Based Treatment Strategy for Stage 2 Hypertension (ACC/AHA Guidelines):**\n\n1. **Initiate Dual First-Line Therapy:** When baseline SBP is >20 mmHg or DBP >10 mmHg above goal (e.g. BP > 140/90 mmHg):\n   - **Option A:** ACE Inhibitor (e.g., Lisinopril 20mg) + Dihydropyridine CCB (e.g., Amlodipine 5mg)\n   - **Option B:** ARB (e.g., Telmisartan 40mg) + Thiazide-like diuretic (Chlorthalidone 12.5–25mg)\n2. **Monitoring Protocol:** Schedule repeat tele-monitoring review at 14 days and serum basic metabolic panel (BMP) at 30 days to assess eGFR and potassium.\n3. **Non-Pharmacological Integration:** Dietary DASH protocol (<1500 mg sodium/day) and remote Bluetooth cuff calibration check.`,
-        sources: ['ACC/AHA 2024 Guidelines', 'Anti-Gravity Protocol Engine'],
+        sources: ['ACC/AHA 2024 Guidelines', 'Cadence Protocol Engine'],
       };
     }
 
@@ -97,24 +97,24 @@ export const AiAssistantsView: React.FC = () => {
       };
     }
 
-    if (q.includes('elena') || q.includes('rostova') || q.includes('baseline')) {
+    if (q.includes('sunita') || q.includes('deshmukh') || q.includes('baseline')) {
       const p1 = patients[0];
       return {
-        text: `**Baseline Comparison for Elena Rostova (${p1.code}):**\n\n• **Current Tele-BP:** ${p1.vitalSigns?.bp} (Personal 6-month baseline: 124/78 mmHg) ➔ **+18 mmHg SBP Excursion**\n• **Heart Rate:** ${p1.vitalSigns?.heartRate} bpm (Personal baseline: 72 bpm)\n• **Oxygenation:** ${p1.vitalSigns?.spo2}% on room air\n• **Refill Timing:** 42-day interval between Lisinopril dispenses (+12 day delay)\n• **Alternative Explanation:** Cardiology clinic trial reduction from 20mg to 10mg daily on April 20 explains why existing tablet supply lasted longer than typical 30-day window.`,
+        text: `**Baseline Comparison for Sunita Deshmukh (${p1.code}):**\n\n• **Current Tele-BP:** ${p1.vitalSigns?.bp} (Personal 6-month baseline: 124/78 mmHg) ➔ **+18 mmHg SBP Excursion**\n• **Heart Rate:** ${p1.vitalSigns?.heartRate} bpm (Personal baseline: 72 bpm)\n• **Oxygenation:** ${p1.vitalSigns?.spo2}% on room air\n• **Refill Timing:** 42-day interval between Lisinopril dispenses (+12 day delay)\n• **Alternative Explanation:** Cardiology clinic trial reduction from 20mg to 10mg daily on April 20 explains why existing tablet supply lasted longer than typical 30-day window.`,
         sources: ['Pharmacy Claims Gateway', 'Home Telehealth Monitor', 'Cardiology Encounters'],
       };
     }
 
-    if (q.includes('marcus') || q.includes('vance') || q.includes('glucose') || q.includes('spike')) {
+    if (q.includes('vikram') || q.includes('malhotra') || q.includes('glucose') || q.includes('spike')) {
       return {
-        text: `**Confounder Analysis for Marcus Vance (AG-2089):**\n\n• **Observed Anomaly:** Continuous glucose telemetry averaged **212 mg/dL** over the past 5 days (baseline: 138 mg/dL).\n• **Primary Confounder Detected:** Surescripts pharmacy claim for Empagliflozin 25mg was rejected due to **Insurance Prior Authorization Lapse** on April 18.\n• **Clinical Impact:** The glucose spike is caused by an administrative supply barrier rather than patient non-adherence. Care coordination team has already initiated automated prior-auth renewal.`,
+        text: `**Confounder Analysis for Vikram Malhotra (CAD-2089):**\n\n• **Observed Anomaly:** Continuous glucose telemetry averaged **212 mg/dL** over the past 5 days (baseline: 138 mg/dL).\n• **Primary Confounder Detected:** Surescripts pharmacy claim for Empagliflozin 25mg was rejected due to **Insurance Prior Authorization Lapse** on April 18.\n• **Clinical Impact:** The glucose spike is caused by an administrative supply barrier rather than patient non-adherence. Care coordination team has already initiated automated prior-auth renewal.`,
         sources: ['Surescripts Claims Portal', 'Dexcom CGM Cloud Stream', 'Payer Eligibility API'],
       };
     }
 
     return {
-      text: `Based on authorized telemetry across your cohort, **${patients.length} patients** are monitored with active real-time anomaly detection. 3 patients currently exhibit high-priority decompensation flags (Marcus Vance, David Patel, and Amara Okafor).\n\nWould you like me to generate an automated care plan, cross-reference medication interactions, or review radiological scans for any of these patients?`,
-      sources: ['Anti-Gravity Neural Telemetry', 'Clinical Cohort Hub'],
+      text: `Based on authorized telemetry across your cohort, **${patients.length} patients** are monitored with active real-time anomaly detection. 3 patients currently exhibit high-priority decompensation flags (Vikram Malhotra, Devendra Patel, and Kavita Sundaram).\n\nWould you like me to generate an automated care plan, cross-reference medication interactions, or review radiological scans for any of these patients?`,
+      sources: ['Cadence Neural Telemetry', 'Clinical Cohort Hub'],
     };
   };
 
@@ -271,7 +271,7 @@ export const AiAssistantsView: React.FC = () => {
               </div>
               <div>
                 <h1 className="text-xl sm:text-2xl font-black tracking-tight">
-                  Anti-Gravity AI Medical Assistants
+                  Cadence AI Medical Assistants
                 </h1>
                 <p className={`text-xs mt-0.5 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
                   Interactive clinical copilots: Neural Decision Chat, Radiological Imaging Analysis, and Pharmacological Safety Shield.
@@ -343,7 +343,7 @@ export const AiAssistantsView: React.FC = () => {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold tracking-tight">Anti-Gravity Clinical Copilot</h3>
+                  <h3 className="text-sm font-bold tracking-tight">Cadence Clinical Copilot</h3>
                   <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800/60">
                     Decision Support Core
                   </span>
@@ -488,7 +488,7 @@ export const AiAssistantsView: React.FC = () => {
               type="text"
               value={inputQuery}
               onChange={(e) => setInputQuery(e.target.value)}
-              placeholder="Ask Anti-Gravity Copilot about patient history, treatment guidelines, or vitals..."
+              placeholder="Ask Cadence Copilot about patient history, treatment guidelines, or vitals..."
               className={`flex-1 px-4 py-3 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 border transition-all ${
                 theme === 'dark'
                   ? 'bg-slate-900 border-slate-800 text-white placeholder-slate-500 focus:ring-cyan-500'
@@ -676,7 +676,7 @@ export const AiAssistantsView: React.FC = () => {
               ) : (
                 <>
                   <Sparkles className="w-4 h-4" />
-                  <span>Trigger Anti-Gravity Deep Scan Analysis</span>
+                  <span>Trigger Cadence Deep Scan Analysis</span>
                 </>
               )}
             </button>

@@ -123,7 +123,7 @@ export const PatientsView: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by patient name, ID (e.g. AG-1042), or condition..."
+            placeholder="Search by patient name, ID (e.g. CAD-1042), or condition..."
             className={`w-full pl-10 pr-9 py-2.5 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 border transition-all ${
               theme === 'dark'
                 ? 'bg-slate-800/80 border-slate-700 text-white placeholder-slate-500 focus:ring-cyan-500'

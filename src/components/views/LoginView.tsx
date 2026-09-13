@@ -25,8 +25,8 @@ import {
 export const LoginView: React.FC = () => {
   const { login, loginDemo, theme, toggleTheme } = useApp();
 
-  const [doctorName, setDoctorName] = useState<string>('Dr. Sarah Jenkins');
-  const [email, setEmail] = useState<string>('sarah.jenkins@antigravity-health.ai');
+  const [doctorName, setDoctorName] = useState<string>('Dr. Rajesh Sharma');
+  const [email, setEmail] = useState<string>('dr.rajesh.sharma@cadence-health.ai');
   const [password, setPassword] = useState<string>('clinicalSecret123!');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -120,7 +120,7 @@ export const LoginView: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-400 to-indigo-400">
-                  ANTI-GRAVITY
+                  CADENCE
                 </span>
                 <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
                   theme === 'dark'
@@ -273,7 +273,7 @@ export const LoginView: React.FC = () => {
                       setDoctorName(e.target.value);
                       if (errors.name) setErrors((prev) => ({ ...prev, name: undefined }));
                     }}
-                    placeholder="e.g. Dr. Sarah Jenkins"
+                    placeholder="e.g. Dr. Rajesh Sharma"
                     className={`w-full pl-10 pr-4 py-2.5 rounded-xl text-xs font-semibold transition-all focus:outline-none focus:ring-2 ${
                       errors.name
                         ? 'border-rose-500 ring-rose-500/20 bg-rose-500/5'
@@ -306,7 +306,7 @@ export const LoginView: React.FC = () => {
                       setEmail(e.target.value);
                       if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
                     }}
-                    placeholder="sarah.jenkins@antigravity-health.ai"
+                    placeholder="dr.rajesh.sharma@cadence-health.ai"
                     className={`w-full pl-10 pr-4 py-2.5 rounded-xl text-xs font-semibold transition-all focus:outline-none focus:ring-2 ${
                       errors.email
                         ? 'border-rose-500 ring-rose-500/20 bg-rose-500/5'
@@ -372,7 +372,7 @@ export const LoginView: React.FC = () => {
                 {isLoading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Accessing Anti-Gravity Dashboard...</span>
+                    <span>Accessing Cadence Dashboard...</span>
                   </>
                 ) : (
                   <>
@@ -406,12 +406,12 @@ export const LoginView: React.FC = () => {
               }`}
             >
               <Zap className="w-3.5 h-3.5 text-cyan-400" />
-              <span>⚡ One-Click Demo (Dr. Sarah Jenkins)</span>
+              <span>⚡ One-Click Demo (Dr. Rajesh Sharma)</span>
             </button>
           </div>
 
           <div className="text-center text-[11px] text-slate-500">
-            Protected by Anti-Gravity Biometric & MFA Protocol • 256-Bit TLS
+            Protected by Cadence Biometric & MFA Protocol • 256-Bit TLS
           </div>
         </div>
       </div>

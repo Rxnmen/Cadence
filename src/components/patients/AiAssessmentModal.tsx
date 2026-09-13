@@ -54,7 +54,7 @@ export const AiAssessmentModal: React.FC<AiAssessmentModalProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold tracking-tight">Anti-Gravity AI Assessment</h2>
+                <h2 className="text-base font-bold tracking-tight">Cadence AI Assessment</h2>
                 <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
                   theme === 'dark'
                     ? 'bg-cyan-950/80 text-cyan-300 border-cyan-800/80'
@@ -247,7 +247,7 @@ export const AiAssessmentModal: React.FC<AiAssessmentModalProps> = ({
 
               {/* Non-Punitive Notice */}
               <div className="p-3.5 rounded-2xl bg-cyan-950/30 border border-cyan-800/40 text-[11px] text-slate-300 leading-relaxed">
-                <strong>Anti-Gravity Clinical Notice:</strong> This report is generated to assist diagnostic decision-making. It evaluates potential medication irregularity and hemodynamic drift without punitive assumptions.
+                <strong>Cadence Clinical Notice:</strong> This report is generated to assist diagnostic decision-making. It evaluates potential medication irregularity and hemodynamic drift without punitive assumptions.
               </div>
             </div>
           )}
