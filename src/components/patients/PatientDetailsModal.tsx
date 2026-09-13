@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   Printer,
   ChevronRight,
+  Search,
 } from 'lucide-react';
 
 interface PatientDetailsModalProps {
@@ -31,7 +32,7 @@ export const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
   onClose,
   onRunAssessment,
 }) => {
-  const { theme } = useApp();
+  const { theme, openDetective } = useApp();
   const [activeTab, setActiveTab] = useState<'overview' | 'medications' | 'history' | 'ai-notes'>('overview');
 
   const riskColor =
@@ -297,6 +298,21 @@ export const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
           </button>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                onClose();
+                openDetective(patient.id);
+              }}
+              className={`px-3.5 py-2 rounded-xl text-xs font-semibold border transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+                theme === 'dark'
+                  ? 'bg-slate-800 hover:bg-slate-700 text-cyan-300 border-slate-700'
+                  : 'bg-sky-50 hover:bg-sky-100 text-sky-800 border-sky-200'
+              }`}
+            >
+              <Search className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Launch Detective</span>
+            </button>
+
             <button
               onClick={() => {
                 onClose();
