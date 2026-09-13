@@ -19,7 +19,10 @@ import {
   Printer,
   ChevronRight,
   Search,
+  Check,
+  Plus,
 } from 'lucide-react';
+import { MedicationStatus } from '../../types/supabase';
 
 interface PatientDetailsModalProps {
   patient: Patient;
@@ -32,8 +35,49 @@ export const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
   onClose,
   onRunAssessment,
 }) => {
-  const { theme, openDetective } = useApp();
-  const [activeTab, setActiveTab] = useState<'overview' | 'medications' | 'history' | 'ai-notes'>('overview');
+  const { theme, openDetective, logDose, addUserSymptom, userSymptoms } = useApp();
+  const [activeTab, setActiveTab] = useState<
+    'overview' | 'medications' | 'symptoms' | 'history' | 'ai-notes'
+  >('overview');
+
+  // Dose logging notification
+  const [feedback, setFeedback] = useState<string | null>(null);
+
+  // Modal symptom form
+  const [symptomText, setSymptomText] = useState<string>('');
+  const [symptomSeverity, setSymptomSeverity] = useState<number>(3);
+  const [isLoggingSymptom, setIsLoggingSymptom] = useState<boolean>(false);
+
+  const showFeedback = (msg: string) => {
+    setFeedback(msg);
+    setTimeout(() => setFeedback(null), 3000);
+  };
+
+  const handleRecordDose = async (medName: string, status: MedicationStatus) => {
+    const res = await logDose(medName, status);
+    if (res.error) {
+      showFeedback(`Error: ${res.error}`);
+    } else {
+      showFeedback(`Dose of ${medName} recorded as ${status.toUpperCase()} in Supabase`);
+    }
+  };
+
+  const handleSymptomSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!symptomText.trim()) return;
+
+    setIsLoggingSymptom(true);
+    const res = await addUserSymptom(symptomText.trim(), symptomSeverity);
+    setIsLoggingSymptom(false);
+
+    if (res.error) {
+      showFeedback(`Error: ${res.error}`);
+    } else {
+      showFeedback(`Symptom recorded: ${symptomText} (${symptomSeverity}/10)`);
+      setSymptomText('');
+      setSymptomSeverity(3);
+    }
+  };
 
   const riskColor =
     patient.riskLevel === 'High' || patient.riskCategory === 'High Priority'
@@ -59,50 +103,54 @@ export const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
         <div className={`p-6 border-b flex items-start justify-between gap-4 ${
           theme === 'dark' ? 'border-slate-800 bg-slate-900/50' : 'border-slate-100 bg-slate-50/70'
         }`}>
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center text-white text-base font-bold shadow-lg shadow-cyan-500/20 shrink-0">
-              {patient.initials || patient.name.slice(0, 2).toUpperCase()}
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-500 to-indigo-600 text-white font-extrabold text-lg flex items-center justify-center shadow-lg shadow-cyan-500/20">
+              {patient.initials}
             </div>
-
-            <div className="space-y-1">
+            <div>
               <div className="flex items-center gap-2.5 flex-wrap">
-                <h2 className="text-lg font-bold tracking-tight">{patient.name}</h2>
-                <span className="text-xs font-mono px-2 py-0.5 rounded-md bg-slate-800 text-cyan-400 font-bold border border-slate-700">
-                  {patient.patientId || patient.code}
+                <h2 className="text-xl font-black tracking-tight">{patient.name}</h2>
+                <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-md bg-cyan-950/80 text-cyan-400 border border-cyan-800/60">
+                  {patient.code}
                 </span>
-                <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${riskColor}`}>
-                  {patient.riskLevel || 'Moderate'} Risk
+                <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${riskColor}`}>
+                  {patient.riskCategory || `${patient.riskLevel} Risk`} ({patient.riskScore}/100)
                 </span>
               </div>
-
-              <div className="text-xs text-slate-400 flex items-center gap-3 flex-wrap">
-                <span>{patient.age} yrs • {patient.gender}</span>
+              <div className="text-xs text-slate-400 mt-1 flex items-center gap-3">
+                <span>Age: <strong>{patient.age}</strong></span>
                 <span>•</span>
-                <span className="text-cyan-400 font-medium">{patient.condition}</span>
+                <span>Gender: <strong>{patient.gender}</strong></span>
                 <span>•</span>
-                <span>Last Visit: <strong className={theme === 'dark' ? 'text-slate-200' : 'text-slate-700'}>{patient.lastVisitDate || 'May 2026'}</strong></span>
+                <span>Primary: <strong className="text-cyan-400">{patient.condition}</strong></span>
               </div>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className={`p-2 rounded-xl transition-colors cursor-pointer ${
-              theme === 'dark' ? 'text-slate-400 hover:bg-slate-800 hover:text-white' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
-            }`}
-            title="Close Modal (Esc)"
+            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Modal Navigation Tabs */}
-        <div className={`px-6 pt-3 border-b flex items-center gap-2 overflow-x-auto ${
-          theme === 'dark' ? 'border-slate-800 bg-slate-900/30' : 'border-slate-100 bg-slate-50/30'
+        {/* Feedback Banner */}
+        {feedback && (
+          <div className="px-6 py-2.5 bg-emerald-500/10 border-b border-emerald-500/30 text-emerald-400 text-xs font-semibold flex items-center gap-2 animate-fade-in">
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <span>{feedback}</span>
+          </div>
+        )}
+
+        {/* Tabs Bar */}
+        <div className={`px-6 border-b flex items-center gap-2 overflow-x-auto ${
+          theme === 'dark' ? 'border-slate-800 bg-slate-900/30' : 'border-slate-200 bg-slate-50/50'
         }`}>
           {[
-            { id: 'overview', label: 'Vitals & Overview', icon: Activity },
-            { id: 'medications', label: 'Medications', icon: Pill },
+            { id: 'overview', label: 'Overview & Vitals', icon: Activity },
+            { id: 'medications', label: 'Medications & Doses', icon: Pill },
+            { id: 'symptoms', label: 'Symptoms & Flares', icon: Heart },
             { id: 'history', label: 'Clinical History', icon: Clock },
             { id: 'ai-notes', label: 'AI Diagnostic Notes', icon: Brain },
           ].map((tab) => {
@@ -180,26 +228,31 @@ export const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
                   <span className="text-[11px] font-mono text-cyan-400 font-semibold">{patient.condition}</span>
                 </div>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  {patient.aiSummary || 'Patient is enrolled in the Cadence AI Longitudinal Telemetry Cohort.'}
+                  {patient.aiSummary || 'Patient is enrolled in the Candace AI Longitudinal Telemetry Cohort.'}
                 </p>
               </div>
             </div>
           )}
 
-          {/* TAB 2: CURRENT MEDICATIONS */}
+          {/* TAB 2: CURRENT MEDICATIONS & DOSE LOGGING */}
           {activeTab === 'medications' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                  <Pill className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>Active Pharmacotherapy Regimen</span>
-                </h3>
-                <span className="text-[10px] text-slate-400">
-                  {patient.currentMedicationsList?.length || 1} Prescriptions
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                    <Pill className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Active Pharmacotherapy Regimen & Direct Dose Logging</span>
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    Click buttons to log doses directly to the Supabase database.
+                  </p>
+                </div>
+                <span className="text-[10px] text-slate-400 font-mono">
+                  {patient.currentMedicationsList?.length || 1} Regimens
                 </span>
               </div>
 
-              <div className="space-y-2.5">
+              <div className="space-y-3">
                 {(patient.currentMedicationsList || [
                   {
                     name: patient.primaryMedication.name,
@@ -210,7 +263,7 @@ export const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
                 ]).map((med, idx) => (
                   <div
                     key={idx}
-                    className={`p-4 rounded-2xl border flex items-center justify-between gap-3 ${
+                    className={`p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                       theme === 'dark' ? 'bg-slate-900/60 border-slate-800' : 'bg-slate-50 border-slate-200'
                     }`}
                   >
@@ -226,10 +279,40 @@ export const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
                       </div>
                     </div>
 
-                    <div className="text-right shrink-0">
-                      <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-800/60 flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" /> Active
-                      </span>
+                    {/* Dose Actions Buttons */}
+                    <div className="flex items-center gap-1.5 flex-wrap self-end sm:self-auto">
+                      <button
+                        onClick={() => handleRecordDose(med.name, 'taken')}
+                        className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs transition-all cursor-pointer active:scale-95 flex items-center gap-1"
+                        title="Mark Dose Taken"
+                      >
+                        <Check className="w-3 h-3" />
+                        <span>Taken</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleRecordDose(med.name, 'late')}
+                        className="px-2 py-1 rounded-lg text-[10px] font-semibold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 transition-all cursor-pointer active:scale-95"
+                        title="Mark Late"
+                      >
+                        Late
+                      </button>
+
+                      <button
+                        onClick={() => handleRecordDose(med.name, 'missed')}
+                        className="px-2 py-1 rounded-lg text-[10px] font-semibold bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 transition-all cursor-pointer active:scale-95"
+                        title="Mark Missed"
+                      >
+                        Missed
+                      </button>
+
+                      <button
+                        onClick={() => handleRecordDose(med.name, 'skipped')}
+                        className="px-2 py-1 rounded-lg text-[10px] font-semibold bg-slate-700/60 hover:bg-slate-700 text-slate-300 border border-slate-600 transition-all cursor-pointer active:scale-95"
+                        title="Mark Skipped"
+                      >
+                        Skip
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -237,7 +320,101 @@ export const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
             </div>
           )}
 
-          {/* TAB 3: CLINICAL HISTORY */}
+          {/* TAB 3: SYMPTOMS & FLARES */}
+          {activeTab === 'symptoms' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                  <Heart className="w-3.5 h-3.5 text-teal-400" />
+                  <span>Symptom Tracker & Signal Correlation</span>
+                </h3>
+                <span className="text-[10px] text-slate-400 font-mono">
+                  Supabase RLS Enabled
+                </span>
+              </div>
+
+              {/* Symptom Log Form */}
+              <form onSubmit={handleSymptomSubmit} className={`p-4 rounded-2xl border space-y-3 ${
+                theme === 'dark' ? 'bg-slate-900/60 border-slate-800' : 'bg-slate-50 border-slate-200'
+              }`}>
+                <div className="space-y-1">
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-300">
+                    Log New Symptom or Reaction
+                  </label>
+                  <input
+                    type="text"
+                    value={symptomText}
+                    onChange={(e) => setSymptomText(e.target.value)}
+                    placeholder="e.g. Mild exertional dyspnea, ankle edema..."
+                    className={`w-full px-3 py-2 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 border ${
+                      theme === 'dark'
+                        ? 'bg-slate-800 border-slate-700 text-white focus:ring-teal-500'
+                        : 'bg-white border-slate-200 text-slate-900 focus:ring-teal-500'
+                    }`}
+                  />
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="text-slate-400">Severity:</span>
+                    <input
+                      type="range"
+                      min="1"
+                      max="10"
+                      value={symptomSeverity}
+                      onChange={(e) => setSymptomSeverity(parseInt(e.target.value, 10))}
+                      className="w-32 accent-teal-500 cursor-pointer"
+                    />
+                    <span className="font-mono font-bold text-teal-400">{symptomSeverity}/10</span>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isLoggingSymptom || !symptomText.trim()}
+                    className="px-4 py-1.5 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white shadow-xs transition-all cursor-pointer disabled:opacity-50 self-end sm:self-auto"
+                  >
+                    {isLoggingSymptom ? 'Saving...' : 'Record Symptom'}
+                  </button>
+                </div>
+              </form>
+
+              {/* Logged Symptoms List */}
+              <div className="space-y-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                  Logged Symptoms ({userSymptoms.length})
+                </span>
+                {userSymptoms.length === 0 ? (
+                  <p className="text-xs text-slate-500 italic">No symptoms recorded yet.</p>
+                ) : (
+                  userSymptoms.map((s) => (
+                    <div
+                      key={s.id}
+                      className={`p-3 rounded-xl border text-xs flex items-center justify-between gap-2 ${
+                        theme === 'dark' ? 'bg-slate-900/40 border-slate-800' : 'bg-white border-slate-200'
+                      }`}
+                    >
+                      <div>
+                        <span className="font-bold text-slate-200 block">{s.symptom}</span>
+                        <span className="text-[10px] text-slate-500">
+                          {new Date(s.recorded_at).toLocaleString([], {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-teal-500/20 text-teal-300 font-bold">
+                        Severity: {s.severity}/10
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: CLINICAL HISTORY */}
           {activeTab === 'history' && (
             <div className="space-y-4">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
@@ -260,41 +437,39 @@ export const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
             </div>
           )}
 
-          {/* TAB 4: AI DIAGNOSTIC NOTES */}
+          {/* TAB 5: AI DIAGNOSTIC NOTES */}
           {activeTab === 'ai-notes' && (
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-cyan-400 font-bold text-xs">
                 <Brain className="w-4 h-4" />
-                <span>Cadence Neural Diagnostic Synthesis</span>
+                <span>Candace Neural Diagnostic Synthesis</span>
               </div>
 
-              <div className={`p-5 rounded-2xl border space-y-3 ${
-                theme === 'dark' ? 'bg-cyan-950/20 border-cyan-800/40 text-slate-200' : 'bg-cyan-50/50 border-cyan-200 text-slate-800'
+              <div className={`p-4 rounded-2xl border text-xs leading-relaxed ${
+                theme === 'dark' ? 'bg-slate-900/40 border-slate-800 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700'
               }`}>
-                <p className="text-xs leading-relaxed font-medium">
-                  {patient.aiDiagnosticNotes || patient.aiSummary}
-                </p>
+                {patient.aiDiagnosticNotes ||
+                  'No immediate contraindications detected. Maintain current monitoring schedule.'}
+              </div>
 
-                <div className="pt-3 border-t border-cyan-900/40 flex items-center justify-between text-[11px] text-slate-400">
-                  <span>Confidence Rating: <strong className="text-cyan-400">98.4% (Multi-Signal Verified)</strong></span>
-                  <span>Model: Cadence Clinical Core v3.0</span>
-                </div>
+              <div className="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-800">
+                <span>Model: Candace Clinical Core v3.0</span>
+                <span>Audit Trail: Verified via SHA-256</span>
               </div>
             </div>
           )}
         </div>
 
-        {/* Modal Actions Footer */}
-        <div className={`p-5 border-t flex flex-wrap items-center justify-between gap-3 ${
-          theme === 'dark' ? 'border-slate-800 bg-slate-900/80' : 'border-slate-100 bg-slate-50'
+        {/* Modal Footer */}
+        <div className={`p-4 sm:p-6 border-t flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+          theme === 'dark' ? 'border-slate-800 bg-slate-900/50' : 'border-slate-100 bg-slate-50/70'
         }`}>
           <button
-            onClick={onClose}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold border transition-colors cursor-pointer ${
-              theme === 'dark' ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700' : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
-            }`}
+            onClick={() => window.print()}
+            className="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white border border-slate-700/80 hover:bg-slate-800 transition-colors flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
           >
-            Close
+            <Printer className="w-3.5 h-3.5" />
+            <span>Print Dossier</span>
           </button>
 
           <div className="flex items-center gap-2">
@@ -318,7 +493,7 @@ export const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
                 onClose();
                 onRunAssessment(patient);
               }}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white text-xs font-bold shadow-md shadow-cyan-500/20 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+              className="px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white shadow-md shadow-cyan-500/25 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>Run AI Assessment</span>

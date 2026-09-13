@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { TiltCard } from '../common/TiltCard';
 import { PatientDetailsModal } from '../patients/PatientDetailsModal';
 import { AiAssessmentModal } from '../patients/AiAssessmentModal';
+import { SupabaseAdherenceSection } from '../dashboard/SupabaseAdherenceSection';
 import {
   Users,
   Search,
@@ -111,6 +112,9 @@ export const PatientsView: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Supabase Live Patient Regimen, Dose Tracking & Transparent Adherence Engine */}
+      <SupabaseAdherenceSection />
 
       {/* Interactive Controls: Search Bar & Risk Filter Buttons */}
       <div className={`p-4 rounded-2xl border backdrop-blur-md flex flex-col md:flex-row md:items-center justify-between gap-3 transition-colors ${

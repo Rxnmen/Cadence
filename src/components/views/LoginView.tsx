@@ -20,25 +20,30 @@ import {
   Radio,
   Pill,
   Scan,
+  Database,
 } from 'lucide-react';
 
 export const LoginView: React.FC = () => {
-  const { login, loginDemo, theme, toggleTheme } = useApp();
+  const { login, signUp, loginDemo, theme, toggleTheme, isSupabaseReady } = useApp();
 
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [doctorName, setDoctorName] = useState<string>('Dr. Rajesh Sharma');
   const [email, setEmail] = useState<string>('dr.rajesh.sharma@cadence-health.ai');
   const [password, setPassword] = useState<string>('clinicalSecret123!');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string }>({});
 
   const validate = (): boolean => {
     const errs: { name?: string; email?: string; password?: string } = {};
 
-    if (!doctorName.trim()) {
-      errs.name = "Doctor's name is required";
-    } else if (doctorName.trim().length < 3) {
-      errs.name = 'Name must be at least 3 characters';
+    if (authMode === 'signup') {
+      if (!doctorName.trim()) {
+        errs.name = "Full name is required";
+      } else if (doctorName.trim().length < 3) {
+        errs.name = 'Name must be at least 3 characters';
+      }
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -58,14 +63,30 @@ export const LoginView: React.FC = () => {
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setAuthError(null);
     if (!validate()) return;
 
     setIsLoading(true);
-    setTimeout(() => {
-      login(doctorName, email);
-    }, 650);
+
+    try {
+      if (authMode === 'signup') {
+        const result = await signUp(email.trim(), password, doctorName.trim());
+        if (result.error) {
+          setAuthError(result.error);
+        }
+      } else {
+        const result = await login(email.trim(), password);
+        if (result.error) {
+          setAuthError(result.error);
+        }
+      }
+    } catch (err: any) {
+      setAuthError(err.message || 'Authentication request failed');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleDemoLogin = () => {
@@ -120,133 +141,106 @@ export const LoginView: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-400 to-indigo-400">
-                  CADENCE
+                  CANDACE
                 </span>
                 <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
                   theme === 'dark'
                     ? 'bg-cyan-950/80 text-cyan-300 border-cyan-800/80'
                     : 'bg-cyan-50 text-cyan-800 border-cyan-200'
                 }`}>
-                  v3.0 CLINICAL
+                  v3.0 SUPABASE
                 </span>
               </div>
               <span className={`text-xs font-semibold tracking-wider uppercase block ${
                 theme === 'dark' ? 'text-slate-400' : 'text-slate-500'
               }`}>
-                AI Health Platform for Doctors
+                Medication-Adherence Monitoring System
               </span>
             </div>
           </div>
 
-          {/* Hero Typography */}
-          <div className="space-y-4 pt-2">
-            <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border ${
-              theme === 'dark'
-                ? 'bg-cyan-950/90 text-cyan-300 border-cyan-800/80'
-                : 'bg-sky-50 text-sky-800 border-sky-200'
-            }`}>
-              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Next-Generation Clinical Decision Support</span>
+          {/* Mission Headline */}
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 backdrop-blur-md">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Multi-Signal Confounder Intelligence & Adherence Tracking</span>
             </div>
-
-            <h1 className={`text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight ${
-              theme === 'dark' ? 'text-white' : 'text-slate-900'
-            }`}>
-              Defy Clinical Blindspots with{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-400">
-                Multi-Signal AI.
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
+              Don't just look at one missed dose.{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-400 to-indigo-400">
+                Connect the clues.
               </span>
             </h1>
-
-            <p className={`text-sm sm:text-base leading-relaxed max-w-xl ${
+            <p className={`text-sm sm:text-base leading-relaxed ${
               theme === 'dark' ? 'text-slate-400' : 'text-slate-600'
             }`}>
-              An elevated intelligence platform engineered for authorized medical practitioners. Connects routinely collected patient vitals, longitudinal claims, symptom logs, and medical imaging without manual paperwork burdens.
+              Candace continuously monitors medication schedules, dose timing irregularities, symptom reports, and clinical indicators with end-to-end Supabase security and Row Level Security.
             </p>
           </div>
 
-          {/* Anti-Gravity Feature Highlights */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-4">
-            <div className={`p-4 rounded-2xl border transition-all ${
-              theme === 'dark' ? 'bg-slate-900/60 border-slate-800/90' : 'bg-white/80 border-slate-200 shadow-sm'
+          {/* 3 Core Capability Highlights */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-2">
+            <div className={`p-4 rounded-2xl border backdrop-blur-md transition-all ${
+              theme === 'dark' ? 'bg-slate-900/60 border-slate-800/80' : 'bg-white/80 border-slate-200/80'
             }`}>
-              <div className="flex items-center gap-2.5 text-cyan-400 mb-1">
-                <Activity className="w-4 h-4" />
-                <span className={`text-xs font-bold ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>
-                  Zero-Gravity Telemetry
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-400 leading-relaxed">
-                Continuous vitals monitoring (BP, HR, SpO2) synchronized with personal historical baselines.
-              </p>
-            </div>
-
-            <div className={`p-4 rounded-2xl border transition-all ${
-              theme === 'dark' ? 'bg-slate-900/60 border-slate-800/90' : 'bg-white/80 border-slate-200 shadow-sm'
-            }`}>
-              <div className="flex items-center gap-2.5 text-teal-400 mb-1">
-                <Brain className="w-4 h-4" />
-                <span className={`text-xs font-bold ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>
-                  Conversational Copilot
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-400 leading-relaxed">
-                Interactive clinical assistant pre-trained to answer queries and review patient trajectories.
-              </p>
-            </div>
-
-            <div className={`p-4 rounded-2xl border transition-all ${
-              theme === 'dark' ? 'bg-slate-900/60 border-slate-800/90' : 'bg-white/80 border-slate-200 shadow-sm'
-            }`}>
-              <div className="flex items-center gap-2.5 text-indigo-400 mb-1">
-                <Scan className="w-4 h-4" />
-                <span className={`text-xs font-bold ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>
-                  Sub-Second Image AI
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-400 leading-relaxed">
-                Chest X-ray, Brain MRI, and Echo visual anomaly scanning with 98.4% diagnostic precision.
-              </p>
-            </div>
-
-            <div className={`p-4 rounded-2xl border transition-all ${
-              theme === 'dark' ? 'bg-slate-900/60 border-slate-800/90' : 'bg-white/80 border-slate-200 shadow-sm'
-            }`}>
-              <div className="flex items-center gap-2.5 text-amber-400 mb-1">
+              <div className="w-8 h-8 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center mb-2.5">
                 <Pill className="w-4 h-4" />
-                <span className={`text-xs font-bold ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>
-                  Drug Interaction Shield
-                </span>
               </div>
-              <p className="text-[11px] text-slate-400 leading-relaxed">
-                Dynamic contraindication engine cross-matching polypharmacy combinations instantly.
-              </p>
+              <div className="font-bold text-xs">Real-Time Regimens</div>
+              <div className="text-[11px] text-slate-400 mt-1">
+                Personalized dose logging: taken, missed, late, and skipped.
+              </div>
+            </div>
+
+            <div className={`p-4 rounded-2xl border backdrop-blur-md transition-all ${
+              theme === 'dark' ? 'bg-slate-900/60 border-slate-800/80' : 'bg-white/80 border-slate-200/80'
+            }`}>
+              <div className="w-8 h-8 rounded-xl bg-teal-500/10 text-teal-400 flex items-center justify-center mb-2.5">
+                <Activity className="w-4 h-4" />
+              </div>
+              <div className="font-bold text-xs">Symptom Tracking</div>
+              <div className="text-[11px] text-slate-400 mt-1">
+                Correlate self-reported symptom flares with refill intervals.
+              </div>
+            </div>
+
+            <div className={`p-4 rounded-2xl border backdrop-blur-md transition-all ${
+              theme === 'dark' ? 'bg-slate-900/60 border-slate-800/80' : 'bg-white/80 border-slate-200/80'
+            }`}>
+              <div className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center mb-2.5">
+                <Database className="w-4 h-4" />
+              </div>
+              <div className="font-bold text-xs">Supabase RLS Protected</div>
+              <div className="text-[11px] text-slate-400 mt-1">
+                Strict Row Level Security ensures users only see their own data.
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Footer Legal & Compliance Notice */}
-        <div className="pt-8 flex items-center gap-3 text-xs text-slate-500">
-          <ShieldCheck className="w-4 h-4 text-cyan-500 shrink-0" />
-          <span>
-            HIPAA-Grade Synthetic Sandbox • HL7 FHIR R4 Ready • All patient data is synthetic for demonstration.
-          </span>
+        {/* Clinical Disclaimer */}
+        <div className="pt-8 text-xs text-slate-500 flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+          <span>Candace Clinical AI • Decision-Support Framework for Authorized Healthcare Providers</span>
         </div>
       </div>
 
-      {/* Right Column: Interactive Doctor Authentication Form */}
-      <div className="lg:w-5/12 p-8 sm:p-12 lg:p-16 flex items-center justify-center relative z-10">
-        <div className="w-full max-w-md space-y-6">
+      {/* Right Form Column */}
+      <div className="lg:w-5/12 p-8 sm:p-12 lg:p-16 flex flex-col justify-center relative z-10">
+        <div className="max-w-md w-full mx-auto space-y-6">
+          {/* Header Title */}
           <div className="space-y-2 text-center lg:text-left">
             <h2 className={`text-2xl font-bold tracking-tight ${
               theme === 'dark' ? 'text-white' : 'text-slate-900'
             }`}>
-              Doctor Authentication
+              {authMode === 'login' ? 'Clinician Authentication' : 'Create Clinician Account'}
             </h2>
             <p className={`text-xs leading-relaxed ${
               theme === 'dark' ? 'text-slate-400' : 'text-slate-500'
             }`}>
-              Sign in with your verified medical credentials to access your active patient queue and AI assistants.
+              {authMode === 'login'
+                ? 'Sign in to access your verified medication cohort, dose logs, and AI assistants.'
+                : 'Register a new clinical account connected to your secure Supabase database.'}
             </p>
           </div>
 
@@ -256,39 +250,94 @@ export const LoginView: React.FC = () => {
               ? 'bg-slate-900/90 border-slate-800 shadow-cyan-950/20'
               : 'bg-white border-slate-200 shadow-slate-200/50'
           }`}>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Doctor's Full Name Input */}
-              <div className="space-y-1.5">
-                <label className={`block text-xs font-bold uppercase tracking-wider ${
-                  theme === 'dark' ? 'text-slate-300' : 'text-slate-700'
-                }`}>
-                  Doctor's Full Name
-                </label>
-                <div className="relative">
-                  <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                  <input
-                    type="text"
-                    value={doctorName}
-                    onChange={(e) => {
-                      setDoctorName(e.target.value);
-                      if (errors.name) setErrors((prev) => ({ ...prev, name: undefined }));
-                    }}
-                    placeholder="e.g. Dr. Rajesh Sharma"
-                    className={`w-full pl-10 pr-4 py-2.5 rounded-xl text-xs font-semibold transition-all focus:outline-none focus:ring-2 ${
-                      errors.name
-                        ? 'border-rose-500 ring-rose-500/20 bg-rose-500/5'
-                        : theme === 'dark'
-                        ? 'bg-slate-800/80 border-slate-700 text-white placeholder-slate-500 focus:ring-cyan-500 focus:border-cyan-500'
-                        : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:ring-sky-500 focus:border-sky-500'
-                    } border`}
-                  />
+            {/* Mode Switch Tabs */}
+            <div className={`p-1 rounded-xl flex items-center mb-5 border ${
+              theme === 'dark' ? 'bg-slate-800/80 border-slate-700' : 'bg-slate-100 border-slate-200'
+            }`}>
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMode('login');
+                  setAuthError(null);
+                }}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  authMode === 'login'
+                    ? 'bg-cyan-500 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMode('signup');
+                  setAuthError(null);
+                }}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  authMode === 'signup'
+                    ? 'bg-cyan-500 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Create Account
+              </button>
+            </div>
+
+            {/* Supabase Status Banner */}
+            {!isSupabaseReady && (
+              <div className="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <div className="leading-tight">
+                  <span className="font-bold block mb-0.5">Supabase Environment Setup:</span>
+                  Provide <code className="text-amber-300 font-mono text-[10px]">VITE_SUPABASE_URL</code> & <code className="text-amber-300 font-mono text-[10px]">VITE_SUPABASE_ANON_KEY</code> in <code className="text-amber-300 font-mono text-[10px]">.env.local</code>. Active with resilient local store.
                 </div>
-                {errors.name && (
-                  <span className="text-[11px] text-rose-500 font-semibold flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" /> {errors.name}
-                  </span>
-                )}
               </div>
+            )}
+
+            {/* Global Auth Error Alert */}
+            {authError && (
+              <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{authError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Doctor's Full Name Input (shown in signup mode) */}
+              {authMode === 'signup' && (
+                <div className="space-y-1.5">
+                  <label className={`block text-xs font-bold uppercase tracking-wider ${
+                    theme === 'dark' ? 'text-slate-300' : 'text-slate-700'
+                  }`}>
+                    Doctor's Full Name
+                  </label>
+                  <div className="relative">
+                    <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                    <input
+                      type="text"
+                      value={doctorName}
+                      onChange={(e) => {
+                        setDoctorName(e.target.value);
+                        if (errors.name) setErrors((prev) => ({ ...prev, name: undefined }));
+                      }}
+                      placeholder="e.g. Dr. Rajesh Sharma"
+                      className={`w-full pl-10 pr-4 py-2.5 rounded-xl text-xs font-semibold transition-all focus:outline-none focus:ring-2 ${
+                        errors.name
+                          ? 'border-rose-500 ring-rose-500/20 bg-rose-500/5'
+                          : theme === 'dark'
+                          ? 'bg-slate-800/80 border-slate-700 text-white placeholder-slate-500 focus:ring-cyan-500 focus:border-cyan-500'
+                          : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:ring-sky-500 focus:border-sky-500'
+                      } border`}
+                    />
+                  </div>
+                  {errors.name && (
+                    <span className="text-[11px] text-rose-500 font-semibold flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" /> {errors.name}
+                    </span>
+                  )}
+                </div>
+              )}
 
               {/* Email Address Input */}
               <div className="space-y-1.5">
@@ -363,7 +412,7 @@ export const LoginView: React.FC = () => {
                 )}
               </div>
 
-              {/* Sign In Button */}
+              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={isLoading}
@@ -372,11 +421,15 @@ export const LoginView: React.FC = () => {
                 {isLoading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Accessing Cadence Dashboard...</span>
+                    <span>Connecting to Candace Core...</span>
                   </>
                 ) : (
                   <>
-                    <span>Sign In / Access Dashboard</span>
+                    <span>
+                      {authMode === 'login'
+                        ? 'Sign In / Access Dashboard'
+                        : 'Create Account & Access Dashboard'}
+                    </span>
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
@@ -411,7 +464,7 @@ export const LoginView: React.FC = () => {
           </div>
 
           <div className="text-center text-[11px] text-slate-500">
-            Protected by Cadence Biometric & MFA Protocol • 256-Bit TLS
+            Protected by Candace Supabase Row Level Security • 256-Bit TLS
           </div>
         </div>
       </div>

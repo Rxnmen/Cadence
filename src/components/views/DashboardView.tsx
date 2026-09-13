@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { KpiCards } from '../dashboard/KpiCards';
 import { PatientCard } from '../dashboard/PatientCard';
+import { SupabaseAdherenceSection } from '../dashboard/SupabaseAdherenceSection';
 import { RadialScore } from '../common/RadialScore';
 import { UncertaintyDisclaimer } from '../common/UncertaintyDisclaimer';
 import { TiltCard } from '../common/TiltCard';
@@ -72,6 +73,9 @@ export const DashboardView: React.FC = () => {
 
       {/* Top 5 KPI Cards with 3D Tilt & Micro Sparklines */}
       <KpiCards />
+
+      {/* Supabase Real-Time Patient Regimen & Transparent Adherence Engine */}
+      <SupabaseAdherenceSection />
 
       {/* Uncertainty Safeguard Notice */}
       <UncertaintyDisclaimer />
