@@ -22,7 +22,7 @@ interface CommandPaletteProps {
 }
 
 export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose }) => {
-  const { patients, setActiveView, openDetective, setSelectedPatientId } = useApp();
+  const { patients, setActiveView, openDetective, setSelectedPatientId, theme } = useApp();
   const [query, setQuery] = useState<string>('');
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -92,16 +92,22 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-20 sm:pt-28 px-4 bg-slate-950/45 backdrop-blur-sm animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-20 sm:pt-28 px-4 bg-slate-950/60 backdrop-blur-md animate-fadeIn"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-xl bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden text-slate-900 animate-scaleUp"
+        className={`w-full max-w-xl rounded-2xl shadow-2xl border overflow-hidden transition-all animate-scaleUp ${
+          theme === 'dark'
+            ? 'bg-[#0f172a]/95 backdrop-blur-xl border-slate-700/80 text-slate-100 shadow-cyan-950/40'
+            : 'bg-white/95 backdrop-blur-xl border-slate-200/90 text-slate-900 shadow-slate-300/40'
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Input Bar */}
-        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-slate-200/80 bg-slate-50/50">
-          <Search className="w-5 h-5 text-sky-600 shrink-0" />
+        <div className={`flex items-center gap-3 px-4 py-3.5 border-b ${
+          theme === 'dark' ? 'border-slate-800 bg-slate-900/60' : 'border-slate-200/80 bg-slate-50/60'
+        }`}>
+          <Search className="w-5 h-5 text-cyan-500 shrink-0" />
           <input
             ref={inputRef}
             type="text"
@@ -112,14 +118,26 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
             }}
             onKeyDown={handleKeyDown}
             placeholder="Search patients, investigations, views, or actions..."
-            className="w-full text-sm bg-transparent placeholder-slate-400 text-slate-900 focus:outline-none"
+            className={`w-full text-sm bg-transparent focus:outline-none ${
+              theme === 'dark'
+                ? 'placeholder-slate-500 text-white'
+                : 'placeholder-slate-400 text-slate-900'
+            }`}
           />
-          <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono text-slate-400 bg-slate-100 border border-slate-200 rounded-md">
+          <kbd className={`hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono border rounded-md ${
+            theme === 'dark'
+              ? 'text-slate-400 bg-slate-800/80 border-slate-700'
+              : 'text-slate-500 bg-slate-100 border-slate-200'
+          }`}>
             ESC
           </kbd>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+            className={`p-1 rounded-lg cursor-pointer transition-colors ${
+              theme === 'dark'
+                ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+            }`}
           >
             <X className="w-4 h-4" />
           </button>
@@ -128,7 +146,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
         {/* Results List */}
         <div className="max-h-80 overflow-y-auto p-2 space-y-1">
           {filteredItems.length === 0 ? (
-            <div className="py-8 text-center text-xs text-slate-400">
+            <div className={`py-8 text-center text-xs ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
               No matching patients or navigation actions found.
             </div>
           ) : (
@@ -142,7 +160,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
                   onMouseEnter={() => setSelectedIndex(idx)}
                   className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer text-xs transition-all ${
                     isSelected
-                      ? 'bg-sky-600 text-white shadow-xs'
+                      ? 'bg-gradient-to-r from-cyan-600 to-indigo-600 text-white shadow-md shadow-cyan-500/20'
+                      : theme === 'dark'
+                      ? 'hover:bg-slate-800/80 text-slate-300'
                       : 'hover:bg-slate-100/70 text-slate-700'
                   }`}
                 >
@@ -151,6 +171,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
                       className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                         isSelected
                           ? 'bg-white/20 text-white'
+                          : theme === 'dark'
+                          ? 'bg-slate-800 text-slate-300 border border-slate-700'
                           : 'bg-slate-100 text-slate-600 border border-slate-200'
                       }`}
                     >
@@ -162,7 +184,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
                         <span
                           className={`text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded ${
                             isSelected
-                              ? 'bg-sky-700 text-sky-100'
+                              ? 'bg-white/20 text-white'
+                              : theme === 'dark'
+                              ? 'bg-slate-800 text-slate-400'
                               : 'bg-slate-200 text-slate-600'
                           }`}
                         >
@@ -171,7 +195,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
                       </div>
                       <span
                         className={`text-[11px] truncate block ${
-                          isSelected ? 'text-sky-100' : 'text-slate-500'
+                          isSelected
+                            ? 'text-cyan-100'
+                            : theme === 'dark'
+                            ? 'text-slate-400'
+                            : 'text-slate-500'
                         }`}
                       >
                         {item.subtitle}
@@ -181,7 +209,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
 
                   <ArrowRight
                     className={`w-4 h-4 shrink-0 transition-transform ${
-                      isSelected ? 'translate-x-0.5 text-white' : 'opacity-0'
+                      isSelected ? 'translate-x-0.5 text-white opacity-100' : 'opacity-0'
                     }`}
                   />
                 </div>
@@ -191,12 +219,29 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
         </div>
 
         {/* Footer info */}
-        <div className="px-4 py-2 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+        <div className={`px-4 py-2 border-t flex items-center justify-between text-[11px] ${
+          theme === 'dark'
+            ? 'bg-slate-950/80 border-slate-800 text-slate-400'
+            : 'bg-slate-50 border-slate-100 text-slate-500'
+        }`}>
           <div className="flex items-center gap-3">
-            <span>Navigation: <kbd className="px-1 py-0.2 bg-white border border-slate-200 rounded text-[9px]">↑</kbd> <kbd className="px-1 py-0.2 bg-white border border-slate-200 rounded text-[9px]">↓</kbd></span>
-            <span>Select: <kbd className="px-1 py-0.2 bg-white border border-slate-200 rounded text-[9px]">↵</kbd></span>
+            <span>
+              Navigation:{' '}
+              <kbd className={`px-1 py-0.2 border rounded text-[9px] ${
+                theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-300' : 'bg-white border-slate-200 text-slate-600'
+              }`}>↑</kbd>{' '}
+              <kbd className={`px-1 py-0.2 border rounded text-[9px] ${
+                theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-300' : 'bg-white border-slate-200 text-slate-600'
+              }`}>↓</kbd>
+            </span>
+            <span>
+              Select:{' '}
+              <kbd className={`px-1 py-0.2 border rounded text-[9px] ${
+                theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-300' : 'bg-white border-slate-200 text-slate-600'
+              }`}>↵</kbd>
+            </span>
           </div>
-          <span>Cadence Intelligence Quick Dispatch</span>
+          <span className="font-medium text-cyan-500/80">Cadence Intelligence Quick Dispatch</span>
         </div>
       </div>
     </div>

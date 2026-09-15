@@ -1,5 +1,6 @@
 import React from 'react';
 import { Patient } from '../../types/patient';
+import { useApp } from '../../context/AppContext';
 import { RiskBadge } from '../common/RiskBadge';
 import { TiltCard } from '../common/TiltCard';
 import {
@@ -24,11 +25,13 @@ export const PatientCard: React.FC<PatientCardProps> = ({
   onInvestigate,
   onSelect,
 }) => {
+  const { theme } = useApp();
+
   const getScoreConfig = (s: number) => {
-    if (s >= 80) return { text: 'text-rose-700', bg: 'bg-rose-50', border: 'border-rose-200/90', glow: 'shadow-[0_0_12px_rgba(225,29,72,0.15)]' };
-    if (s >= 65) return { text: 'text-amber-800', bg: 'bg-amber-50', border: 'border-amber-200/90', glow: 'shadow-[0_0_12px_rgba(217,119,6,0.15)]' };
-    if (s >= 40) return { text: 'text-sky-700', bg: 'bg-sky-50', border: 'border-sky-200/90', glow: 'shadow-[0_0_12px_rgba(2,132,199,0.15)]' };
-    return { text: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200/90', glow: 'shadow-[0_0_12px_rgba(16,185,129,0.15)]' };
+    if (s >= 80) return { text: 'text-rose-400', bg: 'bg-rose-500/15', border: 'border-rose-500/30', glow: 'shadow-[0_0_12px_rgba(244,63,94,0.2)]' };
+    if (s >= 65) return { text: 'text-amber-400', bg: 'bg-amber-500/15', border: 'border-amber-500/30', glow: 'shadow-[0_0_12px_rgba(245,158,11,0.2)]' };
+    if (s >= 40) return { text: 'text-cyan-400', bg: 'bg-cyan-500/15', border: 'border-cyan-500/30', glow: 'shadow-[0_0_12px_rgba(6,182,212,0.2)]' };
+    return { text: 'text-emerald-400', bg: 'bg-emerald-500/15', border: 'border-emerald-500/30', glow: 'shadow-[0_0_12px_rgba(16,185,129,0.2)]' };
   };
 
   const scoreStyle = getScoreConfig(patient.riskScore);
@@ -37,25 +40,41 @@ export const PatientCard: React.FC<PatientCardProps> = ({
     <TiltCard
       maxTilt={4}
       glareOpacity={0.12}
-      className="bg-white rounded-2xl border border-slate-200/85 p-5 card-elevation-hover flex flex-col justify-between"
+      className={`rounded-2xl border p-5 card-elevation-hover flex flex-col justify-between transition-all duration-300 ${
+        theme === 'dark'
+          ? 'bg-slate-900/85 border-slate-800 hover:border-cyan-500/40 shadow-md shadow-black/20 hover:shadow-cyan-950/20 text-slate-100'
+          : 'bg-white border-slate-200/85 shadow-2xs hover:border-sky-300 text-slate-900'
+      }`}
     >
       <div>
         {/* Top Header: Demographics & Luminous Risk Score */}
         <div className="flex items-start justify-between gap-3 mb-3.5">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-slate-100 to-slate-200 border border-slate-300/80 flex items-center justify-center font-bold text-xs text-slate-800 shadow-2xs group-hover:from-sky-50 group-hover:to-teal-50 group-hover:text-sky-700 transition-all">
+            <div className={`w-11 h-11 rounded-2xl border flex items-center justify-center font-bold text-xs shadow-2xs transition-all ${
+              theme === 'dark'
+                ? 'bg-gradient-to-tr from-cyan-500/20 to-indigo-500/20 border-cyan-500/30 text-cyan-400'
+                : 'bg-gradient-to-tr from-slate-100 to-slate-200 border-slate-300/80 text-slate-800'
+            }`}>
               {patient.initials}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-sm text-slate-900 group-hover:text-sky-900 transition-colors">
+                <span className={`font-bold text-sm transition-colors ${
+                  theme === 'dark' ? 'text-white group-hover:text-cyan-400' : 'text-slate-900 group-hover:text-sky-900'
+                }`}>
                   {patient.name}
                 </span>
-                <span className="text-[10px] font-mono font-semibold px-1.5 py-0.2 bg-slate-100 text-slate-600 rounded-md border border-slate-200/70">
+                <span className={`text-[10px] font-mono font-semibold px-1.5 py-0.2 rounded-md border ${
+                  theme === 'dark'
+                    ? 'bg-slate-800 text-slate-400 border-slate-700'
+                    : 'bg-slate-100 text-slate-600 border-slate-200/70'
+                }`}>
                   {patient.code}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 font-medium mt-0.5">
+              <p className={`text-xs font-medium mt-0.5 ${
+                theme === 'dark' ? 'text-slate-400' : 'text-slate-500'
+              }`}>
                 {patient.age} yrs • {patient.gender} • {patient.condition}
               </p>
             </div>
@@ -76,14 +95,18 @@ export const PatientCard: React.FC<PatientCardProps> = ({
         </div>
 
         {/* Primary Medication Banner */}
-        <div className="p-3 bg-slate-50/90 rounded-xl border border-slate-200/70 mb-3.5 flex items-center justify-between shadow-2xs">
+        <div className={`p-3 rounded-xl border mb-3.5 flex items-center justify-between shadow-2xs ${
+          theme === 'dark'
+            ? 'bg-slate-950/60 border-slate-800/80 text-slate-200'
+            : 'bg-slate-50/90 border-slate-200/70 text-slate-900'
+        }`}>
           <div className="flex items-center gap-2 text-xs">
-            <Pill className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+            <Pill className="w-3.5 h-3.5 text-cyan-500 shrink-0" />
             <div className="truncate">
-              <span className="font-bold text-slate-900">
+              <span className={`font-bold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-900'}`}>
                 {patient.primaryMedication.name}
               </span>
-              <span className="text-slate-500 ml-1">
+              <span className={`ml-1 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
                 — {patient.primaryMedication.dosage} ({patient.primaryMedication.frequency})
               </span>
             </div>
@@ -95,7 +118,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({
         <div className="space-y-1.5 mb-4">
           <div className="flex items-center justify-between text-[11px] text-slate-400 font-medium">
             <span>Main Contributing Signals</span>
-            <span className="text-[10px] text-sky-600 font-semibold flex items-center gap-1">
+            <span className="text-[10px] text-cyan-400 font-semibold flex items-center gap-1">
               <Activity className="w-3 h-3" />
               {patient.contributingSignals.length} signals correlated
             </span>
@@ -104,14 +127,18 @@ export const PatientCard: React.FC<PatientCardProps> = ({
             {patient.contributingSignals.slice(0, 3).map((sig) => (
               <span
                 key={sig.id}
-                className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 bg-white border border-slate-200/90 text-slate-700 rounded-lg font-medium shadow-2xs group-hover:border-slate-300"
+                className={`inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg font-medium shadow-2xs border ${
+                  theme === 'dark'
+                    ? 'bg-slate-800/90 border-slate-700 text-slate-300'
+                    : 'bg-white border-slate-200/90 text-slate-700'
+                }`}
               >
                 <span
                   className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                     sig.strength === 'Strong'
-                      ? 'bg-sky-500'
+                      ? 'bg-cyan-400'
                       : sig.strength === 'Moderate'
-                      ? 'bg-teal-500'
+                      ? 'bg-teal-400'
                       : 'bg-slate-400'
                   }`}
                 />
@@ -119,7 +146,11 @@ export const PatientCard: React.FC<PatientCardProps> = ({
               </span>
             ))}
             {patient.contributingSignals.length > 3 && (
-              <span className="text-[11px] px-2 py-1 bg-slate-100/90 text-slate-600 rounded-lg font-semibold border border-slate-200/70">
+              <span className={`text-[11px] px-2 py-1 rounded-lg font-semibold border ${
+                theme === 'dark'
+                  ? 'bg-slate-800 text-slate-400 border-slate-700'
+                  : 'bg-slate-100/90 text-slate-600 border-slate-200/70'
+              }`}>
                 +{patient.contributingSignals.length - 3} more
               </span>
             )}
@@ -128,7 +159,9 @@ export const PatientCard: React.FC<PatientCardProps> = ({
       </div>
 
       {/* Footer Timestamp & Investigation Actions */}
-      <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+      <div className={`pt-3 border-t flex items-center justify-between gap-2 ${
+        theme === 'dark' ? 'border-slate-800' : 'border-slate-100'
+      }`}>
         <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium">
           <Clock className="w-3.5 h-3.5" />
           <span>{patient.lastReviewed}</span>
@@ -137,14 +170,18 @@ export const PatientCard: React.FC<PatientCardProps> = ({
         <div className="flex items-center gap-2">
           <button
             onClick={() => onSelect(patient.id)}
-            className="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer active:scale-95 ${
+              theme === 'dark'
+                ? 'text-slate-300 hover:text-white hover:bg-slate-800'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
           >
             Profile
           </button>
 
           <button
             onClick={() => onInvestigate(patient.id)}
-            className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-700 text-white shadow-xs hover:shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+            className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white shadow-xs hover:shadow-md transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 btn-press-3d"
           >
             <Search className="w-3.5 h-3.5" />
             <span>Investigate</span>

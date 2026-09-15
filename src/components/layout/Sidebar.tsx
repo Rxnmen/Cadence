@@ -38,7 +38,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className = '', onItemClick })
   const highRiskCount = patients.filter((p) => p.riskLevel === 'High' || p.riskCategory === 'High Priority').length;
   const pendingAlertsCount = alerts.filter((a) => a.status === 'pending').length;
 
-  // The 4 Primary Tabs required by user specification
+  // The Primary Navigation Tabs
   const primaryTabs: {
     id: ActiveView;
     label: string;
@@ -48,12 +48,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ className = '', onItemClick })
     badgeColor?: string;
   }[] = [
     {
+      id: 'dashboard',
+      label: 'Command Center',
+      description: 'Overview, KPIs & adherence',
+      icon: Activity,
+      badge: 'Live',
+      badgeColor: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+    },
+    {
       id: 'patients',
       label: 'Patient Management',
       description: 'Queue & risk triage',
       icon: Users,
       badge: `${patients.length} Total`,
-      badgeColor: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+      badgeColor: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
     },
     {
       id: 'ai-assistants',
@@ -178,26 +186,26 @@ export const Sidebar: React.FC<SidebarProps> = ({ className = '', onItemClick })
               <button
                 key={tab.id}
                 onClick={() => handleSelect(tab.id)}
-                className={`w-full flex items-center justify-between p-3 rounded-2xl text-xs font-semibold transition-all cursor-pointer group ${
+                className={`w-full flex items-center justify-between p-3 rounded-2xl text-xs font-semibold transition-all duration-200 cursor-pointer group relative overflow-hidden active:scale-[0.98] ${
                   isActive
                     ? theme === 'dark'
-                      ? 'bg-gradient-to-r from-cyan-950/80 to-slate-900 text-cyan-300 border border-cyan-700/50 shadow-sm shadow-cyan-950/50'
-                      : 'bg-gradient-to-r from-cyan-50 to-sky-50 text-sky-900 border border-sky-200 shadow-sm'
+                      ? 'bg-gradient-to-r from-cyan-950/90 via-slate-900 to-slate-900 text-cyan-300 border border-cyan-700/50 shadow-md shadow-cyan-950/60 before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-full before:bg-cyan-400'
+                      : 'bg-gradient-to-r from-cyan-50 via-sky-50 to-white text-sky-950 border border-sky-200 shadow-sm before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-full before:bg-sky-600'
                     : theme === 'dark'
-                    ? 'text-slate-300 hover:bg-slate-900/60 hover:text-white border border-transparent'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
+                    ? 'text-slate-300 hover:bg-slate-900/60 hover:text-white hover:translate-x-0.5 border border-transparent'
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-0.5 border border-transparent'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div
-                    className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${
+                    className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
                       isActive
                         ? theme === 'dark'
-                          ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                          ? 'bg-cyan-500/25 text-cyan-300 border border-cyan-500/40 shadow-xs shadow-cyan-500/20'
                           : 'bg-sky-600 text-white shadow-xs'
                         : theme === 'dark'
-                        ? 'bg-slate-800/80 text-slate-400 group-hover:text-cyan-400'
-                        : 'bg-slate-100 text-slate-500 group-hover:text-sky-600'
+                        ? 'bg-slate-800/80 text-slate-400 group-hover:text-cyan-400 group-hover:bg-slate-800'
+                        : 'bg-slate-100 text-slate-500 group-hover:text-sky-600 group-hover:bg-slate-200/70'
                     }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -206,7 +214,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className = '', onItemClick })
                     <div className="font-bold text-xs">{tab.label}</div>
                     <div className={`text-[10px] font-normal ${
                       isActive
-                        ? theme === 'dark' ? 'text-cyan-400/80' : 'text-sky-700'
+                        ? theme === 'dark' ? 'text-cyan-400/90' : 'text-sky-700'
                         : 'text-slate-400'
                     }`}>
                       {tab.description}

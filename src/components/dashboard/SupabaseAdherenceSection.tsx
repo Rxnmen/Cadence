@@ -400,7 +400,7 @@ export const SupabaseAdherenceSection: React.FC = () => {
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <button
                           onClick={() => handleLogDose(med.id, 'taken')}
-                          className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs transition-all flex items-center gap-1 cursor-pointer active:scale-95"
+                          className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs transition-all flex items-center gap-1 cursor-pointer active:scale-95 btn-press-3d"
                           title="Mark Dose Taken"
                         >
                           <Check className="w-3 h-3" />
@@ -409,7 +409,7 @@ export const SupabaseAdherenceSection: React.FC = () => {
 
                         <button
                           onClick={() => handleLogDose(med.id, 'late')}
-                          className="px-2 py-1 rounded-lg text-[11px] font-semibold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 transition-all cursor-pointer active:scale-95"
+                          className="px-2 py-1 rounded-lg text-[11px] font-semibold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 transition-all cursor-pointer active:scale-95 btn-press-3d"
                           title="Mark as Late Dose"
                         >
                           Late
@@ -417,7 +417,7 @@ export const SupabaseAdherenceSection: React.FC = () => {
 
                         <button
                           onClick={() => handleLogDose(med.id, 'missed')}
-                          className="px-2 py-1 rounded-lg text-[11px] font-semibold bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 transition-all cursor-pointer active:scale-95"
+                          className="px-2 py-1 rounded-lg text-[11px] font-semibold bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 transition-all cursor-pointer active:scale-95 btn-press-3d"
                           title="Record Missed Dose"
                         >
                           Missed
@@ -425,7 +425,7 @@ export const SupabaseAdherenceSection: React.FC = () => {
 
                         <button
                           onClick={() => handleLogDose(med.id, 'skipped')}
-                          className="px-2 py-1 rounded-lg text-[11px] font-semibold bg-slate-700/60 hover:bg-slate-700 text-slate-300 border border-slate-600 transition-all cursor-pointer active:scale-95"
+                          className="px-2 py-1 rounded-lg text-[11px] font-semibold bg-slate-700/60 hover:bg-slate-700 text-slate-300 border border-slate-600 transition-all cursor-pointer active:scale-95 btn-press-3d"
                           title="Record Clinically Skipped Dose"
                         >
                           Skip

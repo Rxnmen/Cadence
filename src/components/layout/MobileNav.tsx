@@ -11,6 +11,7 @@ import {
   Database,
   X,
   Atom,
+  Activity,
 } from 'lucide-react';
 
 interface MobileNavProps {
@@ -25,6 +26,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   const primaryItems: { id: ActiveView; label: string; icon: React.FC<{ className?: string }>; badge?: string }[] = [
+    { id: 'dashboard', label: 'Command Center', icon: Activity, badge: 'Live' },
     { id: 'patients', label: 'Patient Management', icon: Users, badge: '7' },
     { id: 'ai-assistants', label: 'AI Medical Assistants', icon: Bot, badge: 'Active' },
     { id: 'analytics', label: 'Diagnostics & Analytics', icon: BarChart3 },
@@ -109,8 +111,8 @@ export const MobileNav: React.FC<MobileNavProps> = ({ isOpen, onClose }) => {
             })}
           </div>
 
-          <div className="space-y-1 border-t pt-3 border-slate-800">
-            <div className="text-[10px] uppercase font-bold text-slate-400 px-2 pb-1">
+          <div className={`space-y-1 border-t pt-3 ${theme === 'dark' ? 'border-slate-800' : 'border-slate-100'}`}>
+            <div className={`text-[10px] uppercase font-bold px-2 pb-1 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
               Clinical Intelligence
             </div>
             {secondaryItems.map((item) => {

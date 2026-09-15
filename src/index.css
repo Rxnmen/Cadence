@@ -242,8 +242,14 @@
 }
 
 /* 3D Depth Utilities */
+.perspective-800 {
+  perspective: 800px;
+}
 .perspective-1000 {
   perspective: 1000px;
+}
+.perspective-1200 {
+  perspective: 1200px;
 }
 
 .transform-style-3d {
@@ -252,6 +258,162 @@
 
 .backface-hidden {
   backface-visibility: hidden;
+}
+
+/* Layer Depth Offsets */
+.translate-z-2 {
+  transform: translateZ(2px);
+}
+.translate-z-4 {
+  transform: translateZ(4px);
+}
+.translate-z-6 {
+  transform: translateZ(6px);
+}
+.translate-z-10 {
+  transform: translateZ(10px);
+}
+.translate-z-16 {
+  transform: translateZ(16px);
+}
+
+/* High-End Glassmorphism Surfaces */
+.glass-card-premium {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 
+    0 1px 2px 0 rgba(0, 0, 0, 0.02),
+    0 12px 32px -8px rgba(15, 23, 42, 0.05),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.95);
+}
+
+.dark .glass-card-premium {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 4px 24px -2px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.09);
+}
+
+/* Dynamic Ambient Glow Mesh Classes */
+.ambient-glow-cyan {
+  background: radial-gradient(circle 450px at 50% 50%, rgba(6, 182, 212, 0.12), transparent 70%);
+}
+.ambient-glow-indigo {
+  background: radial-gradient(circle 500px at 50% 50%, rgba(99, 102, 241, 0.11), transparent 70%);
+}
+.ambient-glow-teal {
+  background: radial-gradient(circle 400px at 50% 50%, rgba(20, 184, 166, 0.1), transparent 70%);
+}
+
+/* Smooth View Enter Transition */
+@keyframes viewEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.995);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-view-enter {
+  animation: viewEnter 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Card Pop Entrance */
+@keyframes cardPop {
+  from {
+    opacity: 0;
+    transform: perspective(1000px) rotateX(3deg) translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(1000px) rotateX(0deg) translateY(0);
+  }
+}
+
+.animate-card-pop {
+  animation: cardPop 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Interactive 3D Button Press */
+.btn-press-3d {
+  transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.16s ease, filter 0.16s ease;
+}
+.btn-press-3d:hover {
+  transform: translateY(-1.5px);
+}
+.btn-press-3d:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+/* Shimmer Sweep Reflection */
+@keyframes shimmerSweep {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(220%); }
+}
+
+.shimmer-sweep {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-sweep::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+  animation: shimmerSweep 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  pointer-events: none;
+}
+
+/* Radar Beacon for Live Telemetry Status */
+@keyframes radarBeacon {
+  0% { transform: scale(1); opacity: 0.9; }
+  60% { transform: scale(2.4); opacity: 0; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+.beacon-radar {
+  position: relative;
+  display: inline-flex;
+}
+
+.beacon-radar::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0.45;
+  animation: radarBeacon 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Luminous Glow Borders */
+.glow-border-cyan {
+  border-color: rgba(6, 182, 212, 0.4);
+  box-shadow: 0 0 16px -2px rgba(6, 182, 212, 0.25);
+}
+.glow-border-emerald {
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 0 16px -2px rgba(16, 185, 129, 0.25);
+}
+.glow-border-rose {
+  border-color: rgba(244, 63, 94, 0.4);
+  box-shadow: 0 0 16px -2px rgba(244, 63, 94, 0.25);
+}
+.glow-border-amber {
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: 0 0 16px -2px rgba(245, 158, 11, 0.25);
 }
 
 /* Reduced motion preference */
