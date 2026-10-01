@@ -222,4 +222,4 @@ npm run dev
 npm run build
 ```
 
-Built with ❤️ for the Cadence Hackathon.
+Built with ❤️ for the M#26 Hackathon.
